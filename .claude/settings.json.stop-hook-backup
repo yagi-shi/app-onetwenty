@@ -1,0 +1,21 @@
+{
+    "hooks": {
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "input=$(cat); active=$(echo \"$input\" | jq -r '.stop_hook_active'); if [ \"$active\" = \"true\" ]; then exit 0; fi; diff=$(git diff HEAD); if [ -z \"$diff\" ]; then exit 0; fi; exit 0"
+                    },
+                    {
+                        "type": "agent",
+                        "prompt": "まず `git diff HEAD` を確認し、空であれば直後の手順は一切実行せず、{\"ok\": true} とだけ出力して終了してください。\n\n差分がある場合のみ、以下の手順を順番に実行してください。\n\n1. stop_hook_active が false の場合、まず `.claude/.review-iteration` に 0 と書き込んでください（新しい編集サイクルの開始）。\n2. `.claude/.review-iteration` を読み、その値に1を足して書き戻してください。これを今回の周回数(N)とします。\n3. Nが3より大きい場合、スコア計算はせず {\"ok\": true, \"systemMessage\": \"🔍 reviewer: 反復上限(3回)に達したため強制終了。手動確認を推奨\"} だけを返して終了してください。\n4. それ以外の場合、`git diff HEAD --name-only` で変更ファイルを確認し、種類に応じて .claude/agents/reviewer-requirements.md / reviewer-design.md / reviewer-implementation.md を読んでその観点でレビューしてください。\n5. 100点満点で採点してください（重大な指摘1件につき-20点、軽微な指摘1件につき-5点を目安に）。\n6. スコアが90点を超えた場合、`.claude/.review-iteration` を0にリセットし、{\"ok\": true, \"systemMessage\": \"🔍 reviewer: OK (score: XX/100)\"} を返してください。\n7. 90点以下の場合、{\"ok\": false, \"reason\": \"🔍【自動レビュー結果】(score: XX/100, 周回: N/3)\\n以下の指摘を直接ファイルに反映してから、再度応答してください：\\n(指摘を列挙)\"} を返してください。\n\n必ずJSONのみを出力し、他のテキストは一切書かないでください。$ARGUMENTS",
+                        "model": "claude-sonnet-5",
+                        "timeout": 180,
+                        "statusMessage": "🔍 reviewerがレビュー中..."
+                    }
+                ]
+            }
+        ]
+    }
+}
