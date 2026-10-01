@@ -11,7 +11,8 @@ import SwiftUI
 struct OneTwentyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // ホーム画面（T-41）ができるまでの仮の表示
+            Color.clear
         }
     }
 }
