@@ -93,8 +93,8 @@
 
 | 項目 | 内容 |
 | ---- | ---- |
-| 概要 | Deployment Target を 26.0、Bundle ID を `com.yagishi.onetwenty`、対応デバイスを iPhone のみ、向きを縦固定に変更する。`knownRegions` に `ja` を追加する。`INFOPLIST_KEY_NSSupportsLiveActivities` と `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` を設定する。`CADisableMinimumFrameDurationOnPhone` に対応するビルド設定が存在するか Xcode で確認し、なければ `Config/OneTwenty-Info.plist` を作って `INFOPLIST_FILE` に指定する。**App Group（`group.com.yagishi.onetwenty`）の Capability を本体ターゲットに追加する**（01 AR-06。SwiftData のストアをこの共有コンテナに置く。T-13 で使う） |
-| 対応要件 | §0 / NFR-6 / NFR-8 / §11.4 / §5.1（v1.1 ウィジェットに備えた App Group） |
+| 概要 | Deployment Target を 26.0、Bundle ID を `com.yagishi.onetwenty`、対応デバイスを iPhone のみ、向きを縦固定に変更する。`knownRegions` に `ja` を追加する。`INFOPLIST_KEY_NSSupportsLiveActivities` と `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` を設定する。`CADisableMinimumFrameDurationOnPhone` に対応するビルド設定が存在するか Xcode で確認し、なければ `Config/OneTwenty-Info.plist` を作って `INFOPLIST_FILE` に指定する。 |
+| 対応要件 | §0 / NFR-6 / NFR-8 / §11.4 |
 | 参照設計書 | 01 AR-10 / AR-11 / 未解決事項 U-1 |
 | 完了条件 | 上記の設定が反映され、ビルドが通ること。`CADisableMinimumFrameDurationOnPhone` の設定方法（ビルド設定かファイルか）を 01 AR-11 に反映すること |
 | テスト観点 | ビルドが通る（本タスクに単体テストはない） |
@@ -150,7 +150,7 @@
 
 | 項目 | 内容 |
 | ---- | ---- |
-| 概要 | `Habit` / `Session`（`SchemaV1`・インデックス・一意制約）、`HabitSnapshot` / `SessionSnapshot`、`HabitRepository` / `SessionRepository`（プロトコル＋SwiftData 実装）、`ModelContainer` の生成（**App Group の共有コンテナに保存**・CloudKit 無効。03 DM-01）を実装する。削除 API と `archivedAt` を戻す API は作らない |
+| 概要 | `Habit` / `Session`（`SchemaV1`・インデックス・一意制約）、`HabitSnapshot` / `SessionSnapshot`、`HabitRepository` / `SessionRepository`（プロトコル＋SwiftData 実装）、`ModelContainer` の生成（既定の保存場所・CloudKit 無効。03 DM-01）を実装する。削除 API と `archivedAt` を戻す API は作らない |
 | 対応要件 | TR-3 / FR-3.3 / FR-3.10 / FR-4.2 / FR-6.3 / FR-3.12 |
 | 参照設計書 | 03 DM-01〜DM-05 / DM-13 / 04 MD-30 / MD-31 |
 | 完了条件 | 実装とインメモリ構成での単体テストが通ること |

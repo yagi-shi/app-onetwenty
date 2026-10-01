@@ -17,9 +17,9 @@
 | 項目     | 内容 |
 | -------- | ---- |
 | 対応要件 | §7 技術要件（SwiftData）/ TR-3 / TR-4 / §10（iCloud 同期を対象外） |
-| 設計     | `ModelContainer` をアプリ起動時に1つだけ作る。スキーマは `Habit` と `Session` の2エンティティ（`SchemaV1`。DM-12）。`ModelConfiguration` は **App Group の共有コンテナ**（`group.com.yagishi.onetwenty`）配下を保存場所に指定し、**CloudKit 連携を無効**（`cloudKitDatabase: .none`）にする。テストでは同じスキーマでインメモリの構成（`isStoredInMemoryOnly: true`）を使う |
-| 理由     | 要件がデータモデルを SwiftData の2エンティティで定義している。共有コンテナも端末の iCloud バックアップに含まれるため、機種変更時の復元を OS に任せられる（要件 §10）。最初から共有コンテナに置くことで、v1.1 のウィジェット追加時にストアを移す必要がなくなる（01 AR-06） |
-| 代替案   | **既定の保存場所（Application Support）に置く**：v1.0 だけを見れば十分だが、v1.1 のウィジェットで移行が必要になるため却下（01 AR-06）。**`isExcludedFromBackup` を付ける**：機種変更で履歴が消えるため却下 |
+| 設計     | `ModelContainer` をアプリ起動時に1つだけ作る。スキーマは `Habit` と `Session` の2エンティティ（`SchemaV1`。DM-12）。`ModelConfiguration` は**既定の保存場所**（アプリの Application Support）を使い、**CloudKit 連携を無効**（`cloudKitDatabase: .none`）にする。テストでは同じスキーマでインメモリの構成（`isStoredInMemoryOnly: true`）を使う |
+| 理由     | 要件がデータモデルを SwiftData の2エンティティで定義している。既定の保存場所は端末の iCloud バックアップに含まれるため、機種変更時の復元を OS に任せられる（要件 §10） |
+| 代替案   | **App Group の共有コンテナに置く**：v1.1 のウィジェットでストアを移す処理が不要になるが、v1.0 では使わない設定を持ち込むため却下（01 AR-06）。**`isExcludedFromBackup` を付ける**：機種変更で履歴が消えるため却下 |
 
 ---
 
@@ -151,7 +151,7 @@ stateDiagram-v2
 
 ### DM-10 キーと既定値
 
-キーには接頭辞 `onetwenty.` を付ける。保存先は**標準の `UserDefaults`**（App Group の共有 `UserDefaults` は使わない）。v1.1 のウィジェットが読むのは習慣と Session（SwiftData のストア）であり、設定値・実行中マーカー・保存待ちを拡張と共有する必要はないため（01 AR-06）。
+キーには接頭辞 `onetwenty.` を付ける。保存先は**標準の `UserDefaults`**。
 
 | キー | 型 | 既定値 | 書き込み担当（01 §3） | 対応要件 |
 | ---- | -- | ------ | --------------------- | -------- |

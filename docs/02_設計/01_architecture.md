@@ -221,8 +221,8 @@ flowchart TD
 | 項目   | 内容                                                                                                                                                                                                                               |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 理由   | Live Activity の UI（`ActivityConfiguration`）は Widget Extension にしか置けない。ホーム画面ウィジェットは v1.1（§3）なので含めない                                                                                                |
-| App Group | `group.com.yagishi.onetwenty` を本体ターゲットに設定し、**SwiftData のストアを共有コンテナに置く**（03 DM-01）。v1.0 では Live Activity 拡張がストアを読まないため機能上は不要だが、v1.1 のホーム画面ウィジェット（要件 §5.1）は習慣と Session を読む。v1.0 で既定の場所に置くと、v1.1 でユーザーの履歴を共有コンテナへコピーする移行処理が必要になるため、最初から共有コンテナに置く |
-| 代替案 | **v1.0 では App Group を設定しない**：v1.0 に不要な設定を入れずに済むが、上記の移行処理が v1.1 で必要になり、履歴を扱う分だけ失敗時の影響が大きいため却下 |
+| App Group | **設定しない**。v1.0 では Live Activity 拡張がストアを読まないため不要（表示内容は ActivityKit の属性で受け取る）。SwiftData のストアは既定の保存場所に置く（03 DM-01）。v1.1 でホーム画面ウィジェット（要件 §5.1）を作る場合は、そのときに App Group の追加とストアの移行を設計する |
+| 代替案 | **v1.0 から App Group を設定し、ストアを共有コンテナに置く**：v1.1 でストアを移す処理が不要になるが、v1.0 に使わない設定（entitlements・グループ登録）を持ち込むことになるため却下。今回必要なものだけを入れる方針とした（ユーザー判断。2026-10-01） |
 
 ---
 
@@ -273,7 +273,6 @@ OneTwenty/                          ← アプリ本体ターゲット
 
 Config/                              ← どのターゲットにも所属させない（同期フォルダの外）
 ├── OneTwenty-Info.plist             本体の INFOPLIST_FILE。ビルド設定で表せないキーのみ（AR-11）
-└── OneTwenty.entitlements           App Group の宣言。CODE_SIGN_ENTITLEMENTS で指定（AR-10）
 
 Shared/                              ← 両ターゲットに所属
 └── TimerActivityAttributes.swift    Live Activity の属性とコンテンツ状態
@@ -355,9 +354,9 @@ OneTwentyUITests/                    ← 既存のまま
 | Swift / Xcode の前提       | **対象**                       | 既存設定の扱いを決める必要がある    |
 | Framework / Package 依存   | **対象**                       | AR-07 / AR-08                       |
 | ターゲット構成             | **対象**                       | Live Activity に拡張が必要（AR-06） |
-| Xcode Capability           | **対象（App Group を追加）**   | 下記 9.3 / AR-06                    |
-| Entitlements               | **対象（App Group のみ）**     | 下記 9.3 / AR-10                    |
-| App Groups                 | **対象**                       | v1.1 ウィジェットのデータ共有に備える（AR-06） |
+| Xcode Capability           | 対象外（追加する Capability なし） | 下記 9.3                            |
+| Entitlements               | 対象外（ファイルを作らない）   | 下記 9.3                            |
+| App Groups                 | 対象外                         | v1.0 では拡張とデータを共有しない（AR-06） |
 | Info.plist                 | **対象**                       | AR-10 / AR-11                       |
 | ActivityKit                | **対象**                       | FR-2.11                             |
 | WidgetKit                  | **対象（Live Activity のみ）** | ホーム画面ウィジェットは v1.1       |
@@ -384,7 +383,6 @@ OneTwentyUITests/                    ← 既存のまま
 | `INFOPLIST_KEY_NSSupportsLiveActivities`                | `YES`                                 | 本体           | Live Activity の開始を許可する（AR-11）                           | FR-2.11          |
 | `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption`           | `NO`                                  | 本体           | 暗号化の申告（AR-11）                                             | §11.4            |
 | `INFOPLIST_FILE`                                        | `Config/OneTwenty-Info.plist`         | 本体           | ビルド設定で表せないキーを生成結果に合成する（AR-11）             | NFR-8            |
-| `CODE_SIGN_ENTITLEMENTS`                                | `Config/OneTwenty.entitlements`       | 本体           | App Group（`group.com.yagishi.onetwenty`）を宣言する。Info.plist と同じ理由で**同期フォルダの外**に置き、リソースとしてバンドルにコピーされるのを避ける（AR-11） | §5.1（v1.1 ウィジェット） |
 
 ### 9.3 Capability・Entitlements・Background
 
@@ -392,9 +390,9 @@ OneTwentyUITests/                    ← 既存のまま
 | --------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Push Notifications    | **追加しない** | ローカル通知のみで、APNs を使わない（TR-4）                                                                                                     |
 | Background Modes      | **追加しない** | 経過時間は `startedAt` との差分で算出するため（TR-1）、バックグラウンドで実行し続ける必要がない。音声のバックグラウンド再生も行わない（FR-2.7） |
-| App Groups            | **追加する**（`group.com.yagishi.onetwenty`） | SwiftData のストアを共有コンテナに置く。v1.0 では拡張から読まないが、v1.1 のホーム画面ウィジェット（要件 §5.1「今日の3件の進捗表示」）は習慣と Session を読むため共有コンテナが要る。後から移すとユーザーの履歴を別の場所へコピーする移行処理が必要になり、要件 §6「履歴を失わせない」に対するリスクになる（AR-06） |
+| App Groups            | **追加しない** | v1.0 では拡張がストアを読まない。v1.1 のホーム画面ウィジェットで必要になった時点で追加する（AR-06） |
 | iCloud / CloudKit     | **追加しない** | §3 で対象外                                                                                                                                     |
-| Entitlements ファイル | **作成する**（App Group のみ） | App Group を設定するため。他の Capability は追加しない |
+| Entitlements ファイル | **作成しない** | 追加する Capability がないため |
 
 ### AR-11 Info.plist
 
@@ -404,7 +402,7 @@ OneTwentyUITests/                    ← 既存のまま
 | -------------------------------------------- | ------------------------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `NSSupportsLiveActivities`                   | `YES`                           | 本体       | ビルド設定 `INFOPLIST_KEY_NSSupportsLiveActivities` | Live Activity を開始できるようにする。これがないと ActivityKit の開始要求が失敗する                                           | FR-2.11  |
 | `ITSAppUsesNonExemptEncryption`              | `NO`                            | 本体       | ビルド設定 `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` | 独自の暗号化を使わないことを申告し、提出時の輸出規制の質問を省く                                                              | §11.4    |
-| `CADisableMinimumFrameDurationOnPhone`       | `YES`                           | 本体       | `Config/OneTwenty-Info.plist` | iPhone の ProMotion 搭載機で 60Hz を超える描画を許可する。これがないとアプリは 60fps に制限され、NFR-8 の 120fps を満たせない | NFR-8    |
+| `CADisableMinimumFrameDurationOnPhone`       | `YES`                           | 本体       | `Config/OneTwenty-Info.plist`（**T-01 で確認済み**：ビルド設定 `INFOPLIST_KEY_CADisableMinimumFrameDurationOnPhone` を置いても生成された Info.plist に出力されない。Xcode 26.6） | iPhone の ProMotion 搭載機で 60Hz を超える描画を許可する。これがないとアプリは 60fps に制限され、NFR-8 の 120fps を満たせない | NFR-8    |
 | `NSExtension` › `NSExtensionPointIdentifier` | `com.apple.widgetkit-extension` | 拡張       | 拡張の `Info.plist`（ターゲット作成時に生成） | Widget Extension として認識させる                                                                       | FR-2.11  |
 
 **`INFOPLIST_FILE` のファイルは同期フォルダの外（`Config/`）に置く。** 同期フォルダ内に Info.plist を置くと、既定でリソースとしてバンドルにコピーされ、生成される Info.plist と衝突してビルドエラーになる。フォルダ外に置けば、メンバーシップの除外設定を追加する必要がない。
@@ -619,7 +617,7 @@ OneTwentyUITests/                    ← 既存のまま
 
 | ID  | 内容                                                                                                                                                                                                                                                                                                                       | 上位の情報源 | 扱い                                                                                                                                       |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| U-1 | 既存の Xcode プロジェクト設定が要件と異なる。Deployment Target（既存 `26.5` / 要件 `26.0`）、Bundle ID（既存 `com.yagishi.OneTwenty` / 要件 `com.yagishi.onetwenty`）、対応デバイス（既存 iPhone・iPad / 要件 iPhone のみ）、対応向き（既存は横向き・iPad 向きを含む）、ローカライズ（既存 `knownRegions` に `ja` がない） | 要件定義書   | 要件に従って設計した（AR-10）。修正は 06 のタスク（基盤フェーズ）で行う。Bundle ID の変更は App Store Connect への登録前であれば影響がない |
+| U-1 | 既存の Xcode プロジェクト設定が要件と異なる。Deployment Target（既存 `26.5` / 要件 `26.0`）、Bundle ID（既存 `com.yagishi.OneTwenty` / 要件 `com.yagishi.onetwenty`）、対応デバイス（既存 iPhone・iPad / 要件 iPhone のみ）、対応向き（既存は横向き・iPad 向きを含む）、ローカライズ（既存 `knownRegions` に `ja` がない） | 要件定義書   | 要件に従って設計した（AR-10）。修正は 06 のタスク（基盤フェーズ）で行う。Bundle ID の変更は App Store Connect への登録前であれば影響がない。**T-01 で解消済み**（2026-09-26） |
 | U-2 | 要件定義書 §9 の v1.0 必須 TODO（完了文言・各種固定文言・テンプレート・検出語リスト・アクセント色・完了音）の中身が未作成                                                                                                                                                                                                  | 要件定義書   | 設計では形式と置き場所のみを確定した（AR-09）。中身がなくても実装とテストは仮データで進められるが、リリースには必要                        |
 
 ---
