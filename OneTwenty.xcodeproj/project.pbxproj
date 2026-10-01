@@ -6,7 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C7A1E00D3054000000A00001 /* OneTwentyLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		C7A1E00E3054000000A00001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B691B3403053F2E8004CB48A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7A1E0013054000000A00001;
+			remoteInfo = OneTwentyLiveActivity;
+		};
 		B691B3563053F2EA004CB48A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B691B3403053F2E8004CB48A /* Project object */;
@@ -23,13 +34,51 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		C7A1E00C3054000000A00001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C7A1E00D3054000000A00001 /* OneTwentyLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneTwentyLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B3483053F2E8004CB48A /* OneTwenty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OneTwenty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B3553053F2EA004CB48A /* OneTwentyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OneTwentyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B35F3053F2EA004CB48A /* OneTwentyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OneTwentyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C7A1E0073054000000A00001 /* Exceptions for "OneTwentyLiveActivity" folder in "OneTwentyLiveActivity" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C7A1E0013054000000A00001 /* OneTwentyLiveActivity */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		C7A1E0063054000000A00001 /* OneTwentyLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C7A1E0073054000000A00001 /* Exceptions for "OneTwentyLiveActivity" folder in "OneTwentyLiveActivity" target */,
+			);
+			path = OneTwentyLiveActivity;
+			sourceTree = "<group>";
+		};
+		C7A1E0083054000000A00001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		B691B34A3053F2E8004CB48A /* OneTwenty */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = OneTwenty;
@@ -69,6 +118,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C7A1E0043054000000A00001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +134,8 @@
 				B691B34A3053F2E8004CB48A /* OneTwenty */,
 				B691B3583053F2EA004CB48A /* OneTwentyTests */,
 				B691B3623053F2EA004CB48A /* OneTwentyUITests */,
+				C7A1E0063054000000A00001 /* OneTwentyLiveActivity */,
+				C7A1E0083054000000A00001 /* Shared */,
 				B691B3493053F2E8004CB48A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +146,7 @@
 				B691B3483053F2E8004CB48A /* OneTwenty.app */,
 				B691B3553053F2EA004CB48A /* OneTwentyTests.xctest */,
 				B691B35F3053F2EA004CB48A /* OneTwentyUITests.xctest */,
+				C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,13 +161,16 @@
 				B691B3443053F2E8004CB48A /* Sources */,
 				B691B3453053F2E8004CB48A /* Frameworks */,
 				B691B3463053F2E8004CB48A /* Resources */,
+				C7A1E00C3054000000A00001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C7A1E00F3054000000A00001 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B691B34A3053F2E8004CB48A /* OneTwenty */,
+				C7A1E0083054000000A00001 /* Shared */,
 			);
 			name = OneTwenty;
 			packageProductDependencies = (
@@ -163,6 +225,29 @@
 			productReference = B691B35F3053F2EA004CB48A /* OneTwentyUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		C7A1E0013054000000A00001 /* OneTwentyLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7A1E0093054000000A00001 /* Build configuration list for PBXNativeTarget "OneTwentyLiveActivity" */;
+			buildPhases = (
+				C7A1E0033054000000A00001 /* Sources */,
+				C7A1E0043054000000A00001 /* Frameworks */,
+				C7A1E0053054000000A00001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C7A1E0063054000000A00001 /* OneTwentyLiveActivity */,
+				C7A1E0083054000000A00001 /* Shared */,
+			);
+			name = OneTwentyLiveActivity;
+			packageProductDependencies = (
+			);
+			productName = OneTwentyLiveActivity;
+			productReference = C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +269,9 @@
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = B691B3473053F2E8004CB48A;
 					};
+					C7A1E0013054000000A00001 = {
+						CreatedOnToolsVersion = 26.6;
+					};
 				};
 			};
 			buildConfigurationList = B691B3433053F2E8004CB48A /* Build configuration list for PBXProject "OneTwenty" */;
@@ -204,6 +292,7 @@
 				B691B3473053F2E8004CB48A /* OneTwenty */,
 				B691B3543053F2EA004CB48A /* OneTwentyTests */,
 				B691B35E3053F2EA004CB48A /* OneTwentyUITests */,
+				C7A1E0013054000000A00001 /* OneTwentyLiveActivity */,
 			);
 		};
 /* End PBXProject section */
@@ -224,6 +313,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B691B35D3053F2EA004CB48A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C7A1E0053054000000A00001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -254,6 +350,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C7A1E0033054000000A00001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -266,6 +369,11 @@
 			isa = PBXTargetDependency;
 			target = B691B3473053F2E8004CB48A /* OneTwenty */;
 			targetProxy = B691B3603053F2EA004CB48A /* PBXContainerItemProxy */;
+		};
+		C7A1E00F3054000000A00001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C7A1E0013054000000A00001 /* OneTwentyLiveActivity */;
+			targetProxy = C7A1E00E3054000000A00001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -543,6 +651,60 @@
 			};
 			name = Release;
 		};
+		C7A1E00A3054000000A00001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZMGKDKRUW7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneTwentyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OneTwenty;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yagishi.onetwenty.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		C7A1E00B3054000000A00001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZMGKDKRUW7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneTwentyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OneTwenty;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yagishi.onetwenty.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -578,6 +740,15 @@
 			buildConfigurations = (
 				B691B3703053F2EA004CB48A /* Debug */,
 				B691B3713053F2EA004CB48A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C7A1E0093054000000A00001 /* Build configuration list for PBXNativeTarget "OneTwentyLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7A1E00A3054000000A00001 /* Debug */,
+				C7A1E00B3054000000A00001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
