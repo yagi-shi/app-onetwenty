@@ -15,6 +15,8 @@ nonisolated enum WizardEffect: Equatable, Sendable {
     case none
     /// 習慣として登録する。成否は状態機械には分からないので、成功したら呼び出し側が画面を閉じる。
     case register(title: String, originalIntent: String)
+    /// 既存の習慣の名前を変更する。登録時の文は書き換えない。
+    case rename(habitID: UUID, title: String)
     case close
 }
 
@@ -28,6 +30,8 @@ nonisolated struct WizardStateMachine: Sendable {
 
     enum Mode: Equatable, Sendable {
         case new(origin: Origin)
+        /// 既存の習慣の名前を変更する。分解済みの文を扱うので、テンプレートと任意の型の選択は出さない。
+        case edit(habitID: UUID, currentTitle: String)
     }
 
     enum ReDecomposeReason: Sendable {
@@ -39,6 +43,8 @@ nonisolated struct WizardStateMachine: Sendable {
 
     enum Step: Equatable, Sendable {
         case freeInput
+        /// 編集の最初の問。現在の習慣名を入力欄に入れた状態から始める。
+        case editInput
         case templateSuggest(TemplateCategory)
         case adverbSuggest(term: String, stripped: String)
         case twoMinCheck
@@ -52,7 +58,7 @@ nonisolated struct WizardStateMachine: Sendable {
     static let redecomposeLimit = 3
 
     let mode: Mode
-    private(set) var step: Step = .freeInput
+    private(set) var step: Step
     /// 登録の候補になっている文。
     private(set) var candidate = ""
     /// 最初に自由入力した文。テンプレートを選んでも、再分解しても変わらない。
@@ -76,6 +82,10 @@ nonisolated struct WizardStateMachine: Sendable {
     init(mode: Mode, language: ContentLanguage, content: ContentBundle) {
         self.mode = mode
         self.language = language
+        switch mode {
+        case .new: step = .freeInput
+        case .edit: step = .editInput
+        }
         templates = content.templates
         terms = content.terms
     }
@@ -84,11 +94,20 @@ nonisolated struct WizardStateMachine: Sendable {
         !history.isEmpty
     }
 
+    /// 最初の問の入力欄に入れておく文。編集では現在の習慣名。
+    /// 現在の上限を超えていてもそのまま返す（短くすれば送信できる）。
+    var initialText: String {
+        switch mode {
+        case .new: ""
+        case .edit(_, let currentTitle): currentTitle
+        }
+    }
+
     /// 型の選択肢を出すかどうか。再分解では、テンプレートに該当しなかった場合だけ任意の選択肢として出す。
     var canChooseGenericPattern: Bool {
         switch step {
         case .genericForced: true
-        case .reDecompose: templateCategory == nil
+        case .reDecompose: isNewFlow && templateCategory == nil
         default: false
         }
     }
@@ -112,7 +131,7 @@ nonisolated struct WizardStateMachine: Sendable {
             } else {
                 detect()
             }
-        case .reDecompose:
+        case .editInput, .reDecompose:
             pushHistory()
             candidate = text
             detect()
@@ -148,7 +167,12 @@ nonisolated struct WizardStateMachine: Sendable {
     mutating func answerTwoMinute(_ fitsInTwoMinutes: Bool) -> WizardEffect {
         guard step == .twoMinCheck else { return .none }
         if fitsInTwoMinutes {
-            return .register(title: candidate, originalIntent: originalIntent)
+            switch mode {
+            case .new:
+                return .register(title: candidate, originalIntent: originalIntent)
+            case .edit(let habitID, _):
+                return .rename(habitID: habitID, title: candidate)
+            }
         }
         pushHistory()
         enterReDecompose(reason: .notTwoMinutes)
@@ -198,6 +222,11 @@ nonisolated struct WizardStateMachine: Sendable {
     }
 
     // MARK: 遷移
+
+    private var isNewFlow: Bool {
+        if case .new = mode { return true }
+        return false
+    }
 
     /// 候補の文が決まるたびに通る合流点。
     private mutating func detect() {
