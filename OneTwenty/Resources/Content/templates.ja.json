@@ -1,0 +1,19 @@
+{
+  "categories": [
+    {
+      "id": "reading",
+      "keywords": ["読書", "本"],
+      "templates": ["本を1ページ読む", "本を開く"]
+    },
+    {
+      "id": "exercise",
+      "keywords": ["運動", "筋トレ", "ランニング"],
+      "templates": ["靴を履く", "腕立て伏せを1回する"]
+    },
+    {
+      "id": "study",
+      "keywords": ["勉強", "英語"],
+      "templates": ["教科書を開く", "単語を1つ覚える"]
+    }
+  ]
+}

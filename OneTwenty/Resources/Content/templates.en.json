@@ -1,0 +1,19 @@
+{
+  "categories": [
+    {
+      "id": "reading",
+      "keywords": ["read", "book"],
+      "templates": ["Read one page", "Open the book"]
+    },
+    {
+      "id": "exercise",
+      "keywords": ["exercise", "workout", "run"],
+      "templates": ["Put on running shoes", "Do one push-up"]
+    },
+    {
+      "id": "study",
+      "keywords": ["study", "learn"],
+      "templates": ["Open the textbook", "Learn one word"]
+    }
+  ]
+}
