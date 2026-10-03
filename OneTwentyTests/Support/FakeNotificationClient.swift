@@ -11,6 +11,8 @@ final class FakeNotificationClient: NotificationClient {
     var authorizationAfterRequest: NotificationAuthorization = .authorized
     /// 予約を失敗させる識別子。
     var failingIdentifiers: Set<String> = []
+    /// 許可のダイアログを表示している間に起きることを差し込む（答える前にタイマーを中断する、など）。
+    var whileRequestingAuthorization: (() async -> Void)?
 
     private(set) var pending: [LocalNotificationRequest] = []
     private(set) var addedIdentifiers: [String] = []
@@ -38,6 +40,7 @@ final class FakeNotificationClient: NotificationClient {
 
     func requestAuthorization() async -> NotificationAuthorization {
         requestAuthorizationCount += 1
+        await whileRequestingAuthorization?()
         if authorization == .notDetermined {
             authorization = authorizationAfterRequest
         }
