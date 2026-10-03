@@ -248,6 +248,23 @@ struct SessionServiceTests {
         #expect(h.liveActivity.currentActivities().isEmpty)
     }
 
+    @Test("終了時刻から 1 秒以上遅れて気づいた完了では、記録はするが音と振動は鳴らさない", arguments: [
+        (120.0, 1),
+        (120.999, 1),
+        (121.0, 0),
+        (300.0, 0),
+    ])
+    func feedbackOnlyWhenObservedLive(seconds: TimeInterval, expectedPlays: Int) async throws {
+        _ = try await start()
+        h.clock.advance(by: seconds)
+
+        let result = await service.completeInForeground()
+
+        #expect(result?.saved == true)
+        #expect(h.sessions.allSessions().count == 1)
+        #expect(h.feedback.playCompletionCount == expectedPlays)
+    }
+
     @Test("完了の処理は 1 回だけ。続けて呼んでも、復元が走っても、記録は 1 件")
     func completesOnlyOnce() async throws {
         _ = try await start()

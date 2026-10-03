@@ -106,7 +106,7 @@ stateDiagram-v2
 | 遷移 | 副作用（実行するのは `SessionService`。MD-40） |
 | ---- | ---- |
 | `Idle → Running` | ①`RunningSessionMarker`（新しい `sessionID`・習慣ID・`startedAt = now`）を保存 ②Live Activity を開始（失敗しても継続。05 EH-04）③許可済みなら `timer.<sessionID>` を `endsAt` に予約（リマインダーのオン/オフに関係なく。FR-2.13 / FR-2.14.1）④通知許可が「未決定」なら許可要求を開始する（**タイマーの開始は待たない**。FR-2.1 / FR-5.6 / 01 仮定 A-12）。要求の結果が「許可」で、その時点でマーカーの `sessionID` が同じまま（実行が続いている）なら `timer.<sessionID>` を予約する。あわせて `ReminderService.sync()` を呼ぶ ⑤**`FeedbackPlayer.prepare()` を呼ぶ**（完了時の再生が遅れないよう、音声ファイルをここで読み込む。MD-45） |
-| `Running → CompletedForeground` | ①Session を `insertIfAbsent`（`id = sessionID`、`completedAt = startedAt + 120`、`sameDayRange` = `DayKey(startedAt)` の日の境界を `WallClock.calendar` で算出して渡す。MD-31）②マーカー削除（**保存に失敗した場合は、その実行を保存待ちへ移してからマーカーを削除する**。05 EH-02b / 03 DM-10）③`timer.<sessionID>` を取消 ④Live Activity を即時終了 ⑤**`FeedbackPlayer` で音とハプティクス**（01 AR-14）⑥`ReminderService.sync()`（全完了なら当日分のリマインダーが外れる。TR-5） |
+| `Running → CompletedForeground` | ①Session を `insertIfAbsent`（`id = sessionID`、`completedAt = startedAt + 120`、`sameDayRange` = `DayKey(startedAt)` の日の境界を `WallClock.calendar` で算出して渡す。MD-31）②マーカー削除（**保存に失敗した場合は、その実行を保存待ちへ移してからマーカーを削除する**。05 EH-02b / 03 DM-10）③`timer.<sessionID>` を取消 ④Live Activity を即時終了 ⑤**`FeedbackPlayer` で音とハプティクス**（01 AR-14。**終了時刻から1秒以内に完了を検出した場合のみ**鳴らす。裏から戻った直後の描き直しで完了を検出した場合は `CompletedBackground` と同じく鳴らさない。描き直しはシーンがアクティブな間だけ行う）⑥`ReminderService.sync()`（全完了なら当日分のリマインダーが外れる。TR-5） |
 | `Background/Killed → CompletedBackground` | 上の①〜④と⑥。**⑤は行わない**（フォアグラウンド外。FR-2.7 / 01 仮定 A-11）。完了通知は OS が既に届けている（FR-2.13） |
 | `Running → Interrupted` | マーカー削除、`timer.<sessionID>` 取消、Live Activity を即時終了。**Session は保存しない**（FR-2.5 / FR-3.3） |
 | `Background/Killed → Discarded` | マーカー削除、`timer.<sessionID>` 取消（残っていれば）、Live Activity を即時終了。Session は保存しない（FR-2.15 / FR-2.15.1）。**タイマー画面を表示中だった場合は、`AppCoordinator` が `TimerViewModel` に「裏で破棄された」を伝えたうえで画面を閉じる**（完了表示は出さない。MD-50 / MD-54） |
@@ -595,7 +595,7 @@ stateDiagram-v2
 | 項目 | 内容 |
 | ---- | ---- |
 | 対応要件 | FR-2.11 / FR-2.11.0 / FR-2.11.1 / FR-2.11.2（01 AR-12） |
-| 属性（不変） | `sessionID: UUID` |
+| 属性（不変） | `sessionID: UUID` / `endedLabel: String`（終了表示の文言。`LiveActivityClient.start` がアプリ本体の String Catalog の `liveActivity.ended` を渡す。拡張側に文言ファイルを置かずに済ませるため） |
 | コンテンツ状態 | `startedAt: Date` / `endsAt: Date` |
 | ロック画面・バナー（必須） | `ProgressView(timerInterval: startedAt...endsAt)` と `Text(timerInterval: startedAt...endsAt, countsDown: true)`。アプリが止まっていても OS が 0:00 まで進める。`context.isStale`（`staleDate` 経過）が真なら、残り時間の代わりに「終了」の表示に切り替える |
 | Dynamic Island（搭載機のみ） | コンパクト・最小・展開の各表示に同じ残り時間を出す。Dynamic Island 固有の操作や導線は作らない（FR-2.11.0） |

@@ -94,6 +94,11 @@ nonisolated struct WizardStateMachine: Sendable {
         !history.isEmpty
     }
 
+    /// 進んだ問の数。戻ると減る。画面側が、問ごとの入力を覚えておくのに使う。
+    var historyDepth: Int {
+        history.count
+    }
+
     /// 最初の問の入力欄に入れておく文。編集では現在の習慣名。
     /// 現在の上限を超えていてもそのまま返す（短くすれば送信できる）。
     var initialText: String {

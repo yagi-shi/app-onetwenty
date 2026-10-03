@@ -16,7 +16,10 @@ final class ActivityKitLiveActivityClient: LiveActivityClient {
         let state = TimerActivityAttributes.ContentState(startedAt: startedAt, endsAt: endsAt)
         // アプリが止まっていても、終了時刻を過ぎたら OS が「終了」の表示に切り替えられるようにする
         _ = try Activity.request(
-            attributes: TimerActivityAttributes(sessionID: sessionID),
+            attributes: TimerActivityAttributes(
+                sessionID: sessionID,
+                endedLabel: String(localized: "liveActivity.ended", defaultValue: "Done")
+            ),
             content: ActivityContent(state: state, staleDate: endsAt),
             pushType: nil
         )

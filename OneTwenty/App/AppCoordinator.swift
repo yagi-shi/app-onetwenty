@@ -7,6 +7,11 @@ struct WizardPresentation: Identifiable, Equatable {
     let id = UUID()
     /// 新規か編集か。どこから開いたか（閉じた後に戻る先）もここから決まる。
     let mode: WizardStateMachine.Mode
+    let viewModel: WizardViewModel
+
+    static func == (lhs: WizardPresentation, rhs: WizardPresentation) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 enum WizardFinish {
@@ -42,6 +47,7 @@ final class AppCoordinator {
     @ObservationIgnored private let settings: SettingsStore
     @ObservationIgnored private let clock: WallClock
     @ObservationIgnored private let makeTimerViewModel: (RunningSessionMarker, String?) -> TimerViewModel
+    @ObservationIgnored private let makeWizardViewModel: (WizardStateMachine.Mode) -> WizardViewModel
     @ObservationIgnored private let prefersReducedMotion: () -> Bool
     @ObservationIgnored private var hasActivatedSinceLaunch = false
 
@@ -51,6 +57,7 @@ final class AppCoordinator {
         settings: SettingsStore,
         clock: WallClock,
         makeTimerViewModel: @escaping (RunningSessionMarker, String?) -> TimerViewModel,
+        makeWizardViewModel: @escaping (WizardStateMachine.Mode) -> WizardViewModel,
         prefersReducedMotion: @escaping () -> Bool
     ) {
         self.sessionService = sessionService
@@ -58,6 +65,7 @@ final class AppCoordinator {
         self.settings = settings
         self.clock = clock
         self.makeTimerViewModel = makeTimerViewModel
+        self.makeWizardViewModel = makeWizardViewModel
         self.prefersReducedMotion = prefersReducedMotion
         route = settings.onboardingCompleted ? .home : .onboarding
         displayDay = DayKey(clock.now, calendar: clock.calendar)
@@ -166,12 +174,18 @@ final class AppCoordinator {
 
     // MARK: ウィザード
 
+    /// 開くたびに新しく作るので、前回の入力や分解の状態は残らない。
     func presentWizard(mode: WizardStateMachine.Mode) {
-        transition { presentedWizard = WizardPresentation(mode: mode) }
+        let wizard = makeWizardViewModel(mode)
+        wizard.onFinish = { [weak self] finish in
+            self?.wizardDidFinish(finish)
+        }
+        transition { presentedWizard = WizardPresentation(mode: mode, viewModel: wizard) }
     }
 
-    /// ウィザードが終わった。閉じた後は、開いた元の画面に戻る。
-    func wizardDidFinish(_ finish: WizardFinish) {
+    /// ウィザードが終わった。閉じた後は、開いた元の画面に戻る
+    /// （ホーム・オンボーディングから開いたならホーム、設定から開いたなら設定）。
+    private func wizardDidFinish(_ finish: WizardFinish) {
         if finish == .succeeded {
             dataVersion += 1
         }

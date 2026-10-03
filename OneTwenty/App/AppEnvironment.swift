@@ -38,7 +38,10 @@ final class AppEnvironment {
         let container: ModelContainer
         let habits: HabitRepository
         let sessions: SessionRepository
+        let settings: SettingsStore
+        let reminders: ReminderService
         let sessionService: SessionService
+        let habitService: HabitService
         let clock: WallClock
     }
 
@@ -71,9 +74,7 @@ final class AppEnvironment {
     }
 
     func makeHomeViewModel() -> HomeViewModel {
-        guard let services, case .ready(let coordinator) = rootState else {
-            preconditionFailure("データを保存する場所を開けていない状態で画面を作ろうとした")
-        }
+        let (services, coordinator) = assembled()
         let viewModel = HomeViewModel(
             habits: services.habits,
             sessions: services.sessions,
@@ -87,6 +88,47 @@ final class AppEnvironment {
             coordinator?.presentWizard(mode: .new(origin: .home))
         }
         return viewModel
+    }
+
+    func makeStatsViewModel() -> StatsViewModel {
+        let (services, _) = assembled()
+        return StatsViewModel(habits: services.habits, sessions: services.sessions, clock: services.clock)
+    }
+
+    func makeSettingsViewModel() -> SettingsViewModel {
+        let (services, coordinator) = assembled()
+        let viewModel = SettingsViewModel(
+            habits: services.habits,
+            habitService: services.habitService,
+            reminders: services.reminders,
+            settings: services.settings
+        )
+        viewModel.onThemeChanged = { [weak coordinator] in
+            coordinator?.themeDidChange()
+        }
+        viewModel.onHabitsChanged = { [weak coordinator] in
+            coordinator?.habitsDidChange()
+        }
+        viewModel.onRename = { [weak coordinator] habit in
+            coordinator?.presentWizard(mode: .edit(habitID: habit.id, currentTitle: habit.title))
+        }
+        return viewModel
+    }
+
+    func makeOnboardingViewModel() -> OnboardingViewModel {
+        let (services, coordinator) = assembled()
+        let viewModel = OnboardingViewModel(settings: services.settings)
+        viewModel.onFinished = { [weak coordinator] in
+            coordinator?.onboardingDidFinish()
+        }
+        return viewModel
+    }
+
+    private func assembled() -> (Services, AppCoordinator) {
+        guard let services, case .ready(let coordinator) = rootState else {
+            preconditionFailure("データを保存する場所を開けていない状態で画面を作ろうとした")
+        }
+        return (services, coordinator)
     }
 
     /// 保存する場所を開き、その上に部品を組み立てる。開けなければ何も組み立てない。
@@ -124,6 +166,13 @@ final class AppEnvironment {
             clock: clock
         )
 
+        let habitService = HabitService(
+            habits: habits,
+            notifications: dependencies.notifications,
+            reminders: reminders,
+            clock: clock
+        )
+
         let language = LanguageResolver.resolve(preferredLocalization: dependencies.preferredLocalization)
         let content = dependencies.contentLoader.load(language: language)
 
@@ -141,6 +190,9 @@ final class AppEnvironment {
                     previousMessage: previousMessage
                 )
             },
+            makeWizardViewModel: { mode in
+                WizardViewModel(mode: mode, habitService: habitService, language: language, content: content)
+            },
             prefersReducedMotion: dependencies.prefersReducedMotion
         )
 
@@ -148,7 +200,10 @@ final class AppEnvironment {
             container: container,
             habits: habits,
             sessions: sessions,
+            settings: settings,
+            reminders: reminders,
             sessionService: sessionService,
+            habitService: habitService,
             clock: clock
         )
         rootState = .ready(coordinator)

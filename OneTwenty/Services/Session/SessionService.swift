@@ -33,6 +33,11 @@ enum RecoveryOutcome: Equatable, Sendable {
 /// タイマーの開始・完了・中断と、アプリがアクティブになったときの復元。
 /// 実行中かどうかは `RunningSessionStore` の印だけで判断し、この型は状態を持たない。
 final class SessionService {
+    /// 終了時刻からこの時間以内に完了を確かめた場合だけ、その場で走り切ったとみなして音と振動を鳴らす。
+    /// 画面を開いている間は毎フレーム確かめるので遅れはごくわずか。これを超えて遅れたなら、
+    /// アプリは裏にいて、戻ってきたところで完了に気づいたことになる。
+    static let liveCompletionWindow: TimeInterval = 1
+
     private let sessions: SessionRepository
     private let habits: HabitRepository
     private let store: RunningSessionStore
@@ -101,11 +106,13 @@ final class SessionService {
     // MARK: 完了・中断
 
     /// 実行中のタイマーが 2 分を走り切っていれば、完了として記録し、音と振動を鳴らす。
+    /// 終了時刻から大きく遅れて気づいた場合（裏から戻ってきた直後など）は、音と振動を鳴らさない。
     /// - Returns: 完了すべきものがなければ `nil`。保存に失敗した場合も `nil` にはならない。
     func completeInForeground() async -> CompletionResult? {
-        guard let marker = store.load(),
-              TimerEngine.progress(startedAt: marker.startedAt, now: clock.now).isFinished
-        else { return nil }
+        guard let marker = store.load() else { return nil }
+        let progress = TimerEngine.progress(startedAt: marker.startedAt, now: clock.now)
+        guard progress.isFinished else { return nil }
+        let isLive = clock.now.timeIntervalSince(progress.endsAt) < Self.liveCompletionWindow
         guard isActive(habitID: marker.habitID) else {
             await discard(marker)
             return nil
@@ -113,7 +120,9 @@ final class SessionService {
 
         var saved = record(marker)
         clearRunning(marker)
-        feedback.playCompletion()
+        if isLive {
+            feedback.playCompletion()
+        }
 
         await liveActivity.end(sessionID: marker.sessionID)
         var synced = false

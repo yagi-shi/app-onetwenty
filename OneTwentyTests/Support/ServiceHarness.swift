@@ -77,8 +77,22 @@ final class ServiceHarness {
             makeTimerViewModel: { [unowned self] marker, previousMessage in
                 makeTimerViewModel(marker: marker, previousMessage: previousMessage)
             },
+            makeWizardViewModel: { [unowned self] mode in
+                makeWizardViewModel(mode: mode)
+            },
             prefersReducedMotion: { prefersReducedMotion }
         )
+    }
+
+    /// ウィザードで使う検出語とテンプレート（日本語）。
+    var wizardContent = ContentBundle(
+        templates: [TemplateCategory(id: "reading", keywords: ["読書"], templates: ["本を開く"])],
+        terms: DetectionTerms(frequencyAdverbs: ["毎日"], goalSuffixes: ["を続ける"]),
+        completionMessages: []
+    )
+
+    func makeWizardViewModel(mode: WizardStateMachine.Mode) -> WizardViewModel {
+        WizardViewModel(mode: mode, habitService: habitService, language: .ja, content: wizardContent)
     }
 
     func makeHomeViewModel() -> HomeViewModel {

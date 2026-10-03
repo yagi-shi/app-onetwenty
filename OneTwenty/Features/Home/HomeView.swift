@@ -7,7 +7,7 @@ struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private enum Destination: Hashable {
+    enum Destination: Hashable {
         case stats
         case settings
     }
@@ -55,10 +55,6 @@ struct HomeView: View {
                 }
                 .accessibilityLabel(Text("home.stats"))
             }
-        }
-        .navigationDestination(for: Destination.self) { _ in
-            // 統計（T-44）・設定（T-45）の画面は、それぞれのタスクで差し替える
-            EmptyView()
         }
         .task(id: ReloadTrigger(day: coordinator.displayDay, version: coordinator.dataVersion)) {
             viewModel.reload(displayDay: coordinator.displayDay)

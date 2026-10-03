@@ -87,6 +87,52 @@ struct AppEnvironmentTests {
         #expect(coordinator.presentedWizard?.mode == .new(origin: .home))
     }
 
+    @Test("設定の画面は、テーマ・習慣の変更・名前の変更を調停役につないでいる")
+    func settingsAreWiredToCoordinator() async throws {
+        let environment = makeEnvironment(ContainerSource())
+        let coordinator = try #require(readyCoordinator(of: environment))
+        let settings = environment.makeSettingsViewModel()
+
+        settings.setTheme(.dark)
+        #expect(coordinator.theme == .dark)
+
+        coordinator.presentWizard(mode: .new(origin: .home))
+        let wizard = try #require(coordinator.presentedWizard?.viewModel)
+        wizard.text = "部屋を片付ける"
+        await wizard.submit()
+        await wizard.answerTwoMinute(true)
+        settings.reload()
+        let habit = try #require(settings.habits.first)
+
+        settings.rename(habit)
+        #expect(coordinator.presentedWizard?.mode == .edit(habitID: habit.id, currentTitle: "部屋を片付ける"))
+        coordinator.presentedWizard?.viewModel.cancel()
+
+        let version = coordinator.dataVersion
+        settings.requestArchive(habit)
+        await settings.confirmArchive()
+        #expect(coordinator.dataVersion == version + 1)
+    }
+
+    @Test("オンボーディングを見終えると、ホームに切り替わり、新規登録のウィザードが開く。キャンセルすればホームのまま")
+    func onboardingIsWiredToCoordinator() throws {
+        let environment = makeEnvironment(ContainerSource())
+        let coordinator = try #require(readyCoordinator(of: environment))
+        let onboarding = environment.makeOnboardingViewModel()
+
+        onboarding.next()
+        onboarding.finish()
+
+        #expect(coordinator.route == .home)
+        #expect(coordinator.presentedWizard?.mode == .new(origin: .onboarding))
+
+        coordinator.presentedWizard?.viewModel.cancel()
+        #expect(coordinator.presentedWizard == nil)
+        #expect(coordinator.route == .home)
+        // 次に起動してもオンボーディングは出ない
+        #expect(makeEnvironment(ContainerSource()).rootState.coordinatorRoute == .home)
+    }
+
     @Test("データを保存する場所を開けなければ、調停役を組み立てない")
     func storeUnavailable() {
         let source = ContainerSource()
@@ -139,5 +185,12 @@ struct AppEnvironmentTests {
 
         #expect(readyCoordinator(of: environment) === before)
         #expect(source.attempts == 1)
+    }
+}
+
+private extension AppEnvironment.RootState {
+    var coordinatorRoute: AppCoordinator.Route? {
+        if case .ready(let coordinator) = self { return coordinator.route }
+        return nil
     }
 }

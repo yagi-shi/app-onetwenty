@@ -6,12 +6,13 @@ struct TimerActivityAttributesTests {
 
     @Test("属性は JSON に変換して戻しても同じ値になる")
     func attributesRoundTrip() throws {
-        let attributes = TimerActivityAttributes(sessionID: UUID())
+        let attributes = TimerActivityAttributes(sessionID: UUID(), endedLabel: "終了")
 
         let data = try JSONEncoder().encode(attributes)
         let decoded = try JSONDecoder().decode(TimerActivityAttributes.self, from: data)
 
         #expect(decoded.sessionID == attributes.sessionID)
+        #expect(decoded.endedLabel == "終了")
     }
 
     @Test("コンテンツ状態は JSON に変換して戻しても同じ値になる")

@@ -304,19 +304,77 @@ struct AppCoordinatorTests {
         #expect(coordinator.presentedWizard?.mode == .edit(habitID: habit.id, currentTitle: habit.title))
     }
 
-    @Test("ウィザードの終了：成功ならデータが変わったことを知らせて閉じる。キャンセルと上限到達は閉じるだけ", arguments: [
-        (WizardFinish.succeeded, 1),
-        (.cancelled, 0),
-        (.limitReached, 0),
-    ])
-    func wizardFinish(finish: WizardFinish, expectedVersion: Int) {
+    @Test("ウィザードは開くたびに新しく作り、前回の入力や分解の状態は残らない")
+    func reopenedWizardIsFresh() throws {
+        let coordinator = h.makeCoordinator()
+        coordinator.presentWizard(mode: .new(origin: .home))
+        let first = try #require(coordinator.presentedWizard?.viewModel)
+        first.text = "部屋を片付ける"
+        first.cancel()
+
+        coordinator.presentWizard(mode: .new(origin: .home))
+
+        let second = try #require(coordinator.presentedWizard?.viewModel)
+        #expect(second !== first)
+        #expect(second.text.isEmpty)
+        #expect(second.step == .freeInput)
+    }
+
+    @Test("ウィザードのキャンセル：データの変更は知らせずに閉じる")
+    func wizardCancelled() throws {
         let coordinator = h.makeCoordinator()
         coordinator.presentWizard(mode: .new(origin: .home))
 
-        coordinator.wizardDidFinish(finish)
+        try #require(coordinator.presentedWizard?.viewModel).cancel()
 
         #expect(coordinator.presentedWizard == nil)
-        #expect(coordinator.dataVersion == expectedVersion)
+        #expect(coordinator.dataVersion == 0)
+    }
+
+    @Test("ウィザードの成功：データが変わったことを知らせて閉じる")
+    func wizardSucceeded() async throws {
+        let coordinator = h.makeCoordinator()
+        coordinator.presentWizard(mode: .new(origin: .home))
+        let wizard = try #require(coordinator.presentedWizard?.viewModel)
+
+        wizard.text = "部屋を片付ける"
+        await wizard.submit()
+        await wizard.answerTwoMinute(true)
+
+        #expect(coordinator.presentedWizard == nil)
+        #expect(coordinator.dataVersion == 1)
+    }
+
+    @Test("ウィザードの上限到達：アラートの OK で、データの変更は知らせずに閉じる")
+    func wizardLimitReached() async throws {
+        for title in ["B", "C"] { try h.addHabit(title) }
+        let coordinator = h.makeCoordinator()
+        coordinator.presentWizard(mode: .new(origin: .home))
+        let wizard = try #require(coordinator.presentedWizard?.viewModel)
+        wizard.text = "部屋を片付ける"
+        await wizard.submit()
+        await wizard.answerTwoMinute(true)
+        #expect(coordinator.presentedWizard != nil)
+
+        wizard.dismissAlert()
+
+        #expect(coordinator.presentedWizard == nil)
+        #expect(coordinator.dataVersion == 0)
+    }
+
+    @Test("ウィザードの保存失敗：閉じない")
+    func wizardSaveFailureKeepsWizard() async throws {
+        let coordinator = h.makeCoordinator()
+        coordinator.presentWizard(mode: .new(origin: .home))
+        let wizard = try #require(coordinator.presentedWizard?.viewModel)
+        wizard.text = "部屋を片付ける"
+        await wizard.submit()
+        h.habits.failsWrites = true
+
+        await wizard.answerTwoMinute(true)
+        wizard.dismissAlert()
+
+        #expect(coordinator.presentedWizard?.viewModel === wizard)
     }
 
     // MARK: その他の通知

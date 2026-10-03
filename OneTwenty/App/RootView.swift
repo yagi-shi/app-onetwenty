@@ -16,30 +16,48 @@ struct RootView: View {
 }
 
 private struct CoordinatedRootView: View {
+    let environment: AppEnvironment
     let coordinator: AppCoordinator
     @State private var homeViewModel: HomeViewModel
+    @State private var onboardingViewModel: OnboardingViewModel
 
     @Environment(\.scenePhase) private var scenePhase
 
     init(environment: AppEnvironment, coordinator: AppCoordinator) {
+        self.environment = environment
         self.coordinator = coordinator
         _homeViewModel = State(initialValue: environment.makeHomeViewModel())
+        _onboardingViewModel = State(initialValue: environment.makeOnboardingViewModel())
     }
 
     var body: some View {
         Group {
             switch coordinator.route {
-            case .onboarding, .home:
-                // オンボーディングの画面は T-46 で差し替える。それまではホームを出す
+            case .onboarding:
+                OnboardingView(viewModel: onboardingViewModel)
+            case .home:
                 NavigationStack {
                     HomeView(viewModel: homeViewModel, coordinator: coordinator)
+                        .navigationDestination(for: HomeView.Destination.self) { destination in
+                            switch destination {
+                            case .stats: StatsScreen(environment: environment, coordinator: coordinator)
+                            case .settings: SettingsScreen(environment: environment, coordinator: coordinator)
+                            }
+                        }
                 }
             }
         }
-        // タイマーは全画面で出し、その間ホームを覆う。
-        // 完了の表示中にホームのリングを見せないという要件を、この出し方で満たしている
-        .fullScreenCover(item: presentedTimer) { timer in
-            TimerView(viewModel: timer)
+        // ウィザードも全画面で出す。設定から開いた場合も、閉じれば設定に戻る
+        .fullScreenCover(item: presentedWizard) { wizard in
+            WizardView(viewModel: wizard.viewModel)
+        }
+        .background {
+            // タイマーは全画面で出し、その間ホームを覆う。
+            // 完了の表示中にホームのリングを見せないという要件を、この出し方で満たしている
+            Color.clear
+                .fullScreenCover(item: presentedTimer) { timer in
+                    TimerView(viewModel: timer)
+                }
         }
         .preferredColorScheme(coordinator.theme.colorScheme)
         .onChange(of: scenePhase, initial: true) { _, phase in
@@ -56,6 +74,40 @@ private struct CoordinatedRootView: View {
     /// 画面を閉じるのは `AppCoordinator` だけなので、ここからは書き換えない。
     private var presentedTimer: Binding<TimerViewModel?> {
         Binding(get: { coordinator.presentedTimer }, set: { _ in })
+    }
+
+    private var presentedWizard: Binding<WizardPresentation?> {
+        Binding(get: { coordinator.presentedWizard }, set: { _ in })
+    }
+}
+
+/// 統計の画面。開くたびに ViewModel を作る。
+private struct StatsScreen: View {
+    let coordinator: AppCoordinator
+    @State private var viewModel: StatsViewModel
+
+    init(environment: AppEnvironment, coordinator: AppCoordinator) {
+        self.coordinator = coordinator
+        _viewModel = State(initialValue: environment.makeStatsViewModel())
+    }
+
+    var body: some View {
+        StatsView(viewModel: viewModel, coordinator: coordinator)
+    }
+}
+
+/// 設定の画面。開くたびに ViewModel を作る。
+private struct SettingsScreen: View {
+    let coordinator: AppCoordinator
+    @State private var viewModel: SettingsViewModel
+
+    init(environment: AppEnvironment, coordinator: AppCoordinator) {
+        self.coordinator = coordinator
+        _viewModel = State(initialValue: environment.makeSettingsViewModel())
+    }
+
+    var body: some View {
+        SettingsView(viewModel: viewModel, coordinator: coordinator)
     }
 }
 

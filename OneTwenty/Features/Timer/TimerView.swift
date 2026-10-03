@@ -6,6 +6,7 @@ struct TimerView: View {
     let viewModel: TimerViewModel
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     /// リングをこれより小さくはしない（最終的な値は実機での確認で決める）。
     private let minimumRingDiameter: CGFloat = 120
@@ -18,6 +19,8 @@ struct TimerView: View {
                 TimelineView(.animation(paused: !isRunning)) { context in
                     ring(diameter: diameter)
                         .onChange(of: context.date) {
+                            // 裏にいる間は完了させない。裏で 2 分たった場合は、戻ったときの復元が扱う
+                            guard scenePhase == .active else { return }
                             viewModel.tick()
                         }
                 }
