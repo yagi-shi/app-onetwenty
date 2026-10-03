@@ -5,8 +5,8 @@
 | 項目     | 内容                               |
 | -------- | ---------------------------------- |
 | 参照元   | requirements.md FR-1.5.1 〜 FR-1.5.1.3 |
-| 更新日   | 2026-09-22                         |
-| ステータス | **暫定**（TODO #10 で確定させる）  |
+| 更新日   | 2026-10-03                         |
+| ステータス | **確定**（TODO #10。2026-10-03）   |
 
 ---
 
@@ -16,8 +16,9 @@
 - 適用するリストは端末の表示言語で決まる。**日本語なら日本語リスト、それ以外（英語・フランス語等）はすべて英語リスト**を使う（NFR-6.1）
 - 検出しても**登録を拒否しない**
 - 日本語には語境がないため部分一致で検出する。「毎日新聞」のような誤検出が起こりうるが、**拒否しないことで実害を回避する**設計としている
+- 英語の語は**単語の区切りでだけ一致させる**（FR-1.5.1.4）。部分一致のままだと "Add an entry to my journal" の "en**try to**" や "housekeeping" の "**keep**" が目標表現として検出され、再分解に戻されて登録できなくなるため。判定は語の端の文字で決まる（英数字で始まる・終わる語は、その側が単語の区切りのときだけ一致）
 - 誤検出より検出漏れを許容する。判断に迷う語はリストに入れない
-- 英語の活用形は**リストに全形を列挙する**（FR-1.5.1.4）。形態素解析やステミングは使わず、検出ロジックは日英共通の部分一致に保つ
+- 英語の活用形は**リストに全形を列挙する**（FR-1.5.1.4）。形態素解析やステミングは使わず、検出ロジックは日英共通に保つ（単語の区切りで照合するため、keeps / keeping のような活用形は列挙がないと検出されない）
 
 ### 検出時の挙動は2種類
 
@@ -85,23 +86,23 @@
 | 検出語（全活用形を列挙）                          | 分解後の例（参考・規範ではない）   |
 | ------------------------------------------------- | ---------------------------------- |
 | keep, keeps, keeping, kept                        | "Keep reading" → "Open a book"     |
-| build a habit of, builds a habit of, building a habit of | —                           |
-| make a habit of, makes a habit of, making a habit of | —                               |
+| build a habit of, builds a habit of, building a habit of, built a habit of | —         |
+| make a habit of, makes a habit of, making a habit of, made a habit of | —              |
 | try to, tries to, trying to, tried to             | —                                  |
 | work on, works on, working on, worked on          | —                                  |
-| get better at, gets better at, getting better at  | —                                  |
+| get better at, gets better at, getting better at, got better at, gotten better at | —  |
 
 ---
 
 ## 3. 提示文言
 
-TODO #1.3 で確定させる。
+確定（TODO #1.3。String Catalog の `wizard.question.adverb` / `wizard.question.goal` と同じ文言）。
 
 ### 頻度副詞（代替案の提示 / FR-1.5.1.2）
 
 ```
 ja : 「{語}」はアプリが管理します。「{除去後の文}」でどうですか？
-en : The app handles "{term}". How about "{stripped}"?
+en : The app takes care of "{term}". How about "{stripped}"?
 ```
 
 採用・不採用の2択をユーザーに選ばせる。
@@ -117,7 +118,7 @@ en : That's a goal. What's the first action?
 
 ---
 
-## 4. 未確定事項
+## 4. 補足
 
-- §2 の「分解後の例」が「—」の行は、TODO #1.3 と合わせて埋める（参考情報のため、未記入でもリリースは妨げない）
-- リストの網羅性は、FR-1.6 の分解テンプレート作成の過程で見つかった表現を随時追加して高める
+- §2 の「分解後の例」が「—」の行は参考情報のため、未記入のままとする（リリースは妨げない）
+- リストは閉じたリストとして確定した。テンプレート作成（TODO #2）の過程で、追加が必要な表現は見つからなかった。語を足す場合は、本書と `detection-terms.<ja|en>.json` を同時に更新する

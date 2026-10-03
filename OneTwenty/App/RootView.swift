@@ -127,15 +127,24 @@ private struct StoreUnavailableView: View {
     let retry: () async -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
-            Text("storeUnavailable.message")
-                .font(.body)
-                .multilineTextAlignment(.center)
-            Button("storeUnavailable.retry") {
-                Task { await retry() }
+        // 文字を大きくしていて画面に収まらないときは、スクロールで全文とボタンに届く
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: 24) {
+                    Text("storeUnavailable.message")
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("storeUnavailable.retry") {
+                        Task { await retry() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .prominentButtonLabel()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height)
             }
-            .buttonStyle(.borderedProminent)
+            .scrollBounceBehavior(.basedOnSize)
         }
-        .padding()
     }
 }

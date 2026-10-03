@@ -8,7 +8,7 @@ enum HabitError: Error, Equatable {
 }
 
 /// 習慣の登録・名前変更・並び替え・アーカイブ。
-/// 保存に成功したときだけ、リマインダーの同期や通知の許可の要求を行う。
+/// リマインダーの同期は、保存に成功したときだけ行う。
 final class HabitService {
     private let habits: HabitRepository
     private let notifications: NotificationClient
@@ -36,10 +36,20 @@ final class HabitService {
             archivedAt: nil
         ))
 
-        // タイマーの完了通知にも許可が要るので、リマインダーがオフでも求める
-        if await notifications.authorizationStatus() == .notDetermined {
-            _ = await notifications.requestAuthorization()
-        }
+        await reminders.sync()
+    }
+
+    /// 通知の許可がまだ決まっていないか。
+    /// 決まっていなければ、登録した側が使い道を説明してから `requestNotificationAuthorization()` を呼ぶ
+    /// （iOS の許可ダイアログには、使い道を書く場所がないため）。
+    func needsNotificationAuthorization() async -> Bool {
+        await notifications.authorizationStatus() == .notDetermined
+    }
+
+    /// 通知の許可を求める。タイマーの完了通知にも許可が要るので、リマインダーがオフでも求める。
+    func requestNotificationAuthorization() async {
+        guard await needsNotificationAuthorization() else { return }
+        _ = await notifications.requestAuthorization()
         await reminders.sync()
     }
 
@@ -57,11 +67,9 @@ final class HabitService {
         try habits.updateOrders(Dictionary(uniqueKeysWithValues: zip(orderedIDs, orderedIDs.indices)))
     }
 
-    /// アーカイブは取り消せない。空いた枠を詰めるため、残りの習慣の並び順を振り直す。
+    /// アーカイブは取り消せない。空いた枠は、同じ保存の中で詰められる。
     func archive(habitID: UUID) async throws {
         try habits.archive(id: habitID, at: clock.now)
-        let remaining = habits.activeHabits().map(\.id)
-        try habits.updateOrders(Dictionary(uniqueKeysWithValues: zip(remaining, remaining.indices)))
         await reminders.sync()
     }
 }

@@ -28,7 +28,7 @@ struct HomeView: View {
                     if viewModel.showsAddLabel {
                         Text("home.addHabit")
                             .font(.body)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.secondaryText)
                             .accessibilityHidden(true)
                     }
                     if viewModel.allCompleted {
@@ -146,7 +146,7 @@ struct HomeView: View {
     private func streakLabel(_ text: String) -> some View {
         Text(text)
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.secondaryText)
     }
 
     private var placeholder: some View {
@@ -155,7 +155,7 @@ struct HomeView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.title2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.secondaryText)
                 .frame(width: ringDiameter, height: ringDiameter)
                 .contentShape(Rectangle())
         }

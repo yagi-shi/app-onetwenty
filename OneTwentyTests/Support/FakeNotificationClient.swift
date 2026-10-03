@@ -11,6 +11,8 @@ final class FakeNotificationClient: NotificationClient {
     var authorizationAfterRequest: NotificationAuthorization = .authorized
     /// 予約を失敗させる識別子。
     var failingIdentifiers: Set<String> = []
+    /// この文字列で始まる識別子の予約を、すべて失敗させる（識別子が事前に分からない完了通知に使う）。
+    var failingPrefixes: Set<String> = []
     /// 許可のダイアログを表示している間に起きることを差し込む（答える前にタイマーを中断する、など）。
     var whileRequestingAuthorization: (() async -> Void)?
 
@@ -52,7 +54,8 @@ final class FakeNotificationClient: NotificationClient {
     }
 
     func add(_ request: LocalNotificationRequest) async throws {
-        if failingIdentifiers.contains(request.identifier) {
+        if failingIdentifiers.contains(request.identifier)
+            || failingPrefixes.contains(where: request.identifier.hasPrefix) {
             throw AddFailure()
         }
         // 本物と同じく、同じ識別子の予約は置き換える

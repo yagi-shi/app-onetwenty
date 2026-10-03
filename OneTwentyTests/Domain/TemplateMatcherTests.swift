@@ -27,6 +27,16 @@ struct TemplateMatcherTests {
         #expect(TemplateMatcher.match(text, categories: [exercise, reading]) == exercise)
     }
 
+    @Test("英語のキーワードは単語の先頭からだけ一致する。語尾が続いていてもよい")
+    func englishKeywordsMatchFromWordStart() {
+        let categories = [reading, exercise]
+
+        #expect(TemplateMatcher.match("More reading time", categories: categories) == reading)
+        #expect(TemplateMatcher.match("Go running", categories: categories) == exercise)
+        #expect(TemplateMatcher.match("Bake bread", categories: categories) == nil)
+        #expect(TemplateMatcher.match("Have brunch", categories: categories) == nil)
+    }
+
     @Test("英語は大文字と小文字を区別しない")
     func caseInsensitive() {
         #expect(TemplateMatcher.match("I want to READ more", categories: [reading, exercise]) == reading)

@@ -8,8 +8,8 @@ nonisolated enum Detection: Equatable, Sendable {
     case frequencyAdverb(term: String, stripped: String)
 }
 
-/// 習慣名に含まれる「目標の言い回し」と「頻度を表す語」を、検出語リストとの部分一致で見つける。
-/// リストにない語は検出しない。
+/// 習慣名に含まれる「目標の言い回し」と「頻度を表す語」を、検出語リストとの照合で見つける。
+/// リストにない語は検出しない。英語の語は単語の区切りでだけ一致する（`TermSearch`）。
 nonisolated enum PhraseDetector {
     static func detect(_ text: String, terms: DetectionTerms) -> Detection {
         if let goal = firstMatch(in: text, terms: terms.goalSuffixes) {
@@ -29,7 +29,7 @@ nonisolated enum PhraseDetector {
     private static func firstMatch(in text: String, terms: [String]) -> (term: String, range: Range<String.Index>)? {
         var best: (term: String, range: Range<String.Index>)?
         for term in terms where !term.isEmpty {
-            guard let range = text.range(of: term, options: .caseInsensitive) else { continue }
+            guard let range = TermSearch.firstRange(of: term, in: text, boundary: .wholeWord) else { continue }
             guard let current = best else {
                 best = (term, range)
                 continue

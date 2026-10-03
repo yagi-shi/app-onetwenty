@@ -61,6 +61,8 @@ struct SettingsView: View {
             Toggle(isOn: reminderEnabled) {
                 Text("settings.reminderEnabled")
             }
+            // 標準の緑ではなく、アプリで使う 1 色に合わせる
+            .tint(Color.accentColor)
             .disabled(!viewModel.areReminderControlsEnabled)
 
             if !viewModel.areReminderControlsEnabled {
@@ -84,9 +86,11 @@ struct SettingsView: View {
             }
         } header: {
             Text("settings.section.preferences")
+                .foregroundStyle(Color.secondaryText)
         } footer: {
             // オフにするのはリマインダーだけで、タイマーの完了通知は止まらない
             Text("settings.reminder.footer")
+                .foregroundStyle(Color.secondaryText)
         }
     }
 
@@ -96,7 +100,7 @@ struct SettingsView: View {
         Section {
             if viewModel.habits.isEmpty {
                 Text("settings.habits.empty")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondaryText)
             }
             ForEach(viewModel.habits) { habit in
                 HStack {
@@ -119,6 +123,7 @@ struct SettingsView: View {
             }
         } header: {
             Text("settings.section.habits")
+                .foregroundStyle(Color.secondaryText)
         }
     }
 

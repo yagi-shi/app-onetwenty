@@ -97,15 +97,28 @@ struct HabitServiceTests {
 
     // MARK: 通知の許可
 
-    @Test("初めての登録で、通知の許可を 1 回だけ求める。許可されたらその場でリマインダーを予約する")
-    func requestsAuthorizationOnFirstRegister() async throws {
+    @Test("登録しただけでは、通知の許可を求めない。未決定の間はリマインダーも予約しない")
+    func registerDoesNotRequestAuthorization() async throws {
         h.notifications.authorization = .notDetermined
 
         _ = try await register("本を1ページ読む")
+
+        #expect(h.notifications.requestAuthorizationCount == 0)
+        #expect(await service.needsNotificationAuthorization())
+        #expect(h.reminderIdentifiers.isEmpty)
+    }
+
+    @Test("許可が未決定なら 1 回だけ求め、許可されたらその場でリマインダーを予約する")
+    func requestsAuthorizationOnce() async throws {
+        h.notifications.authorization = .notDetermined
+        _ = try await register("本を1ページ読む")
+
+        await service.requestNotificationAuthorization()
         #expect(h.notifications.requestAuthorizationCount == 1)
         #expect(h.reminderIdentifiers.count == 60)
+        #expect(await service.needsNotificationAuthorization() == false)
 
-        _ = try await register("靴を履く")
+        await service.requestNotificationAuthorization()
         #expect(h.notifications.requestAuthorizationCount == 1)
     }
 
@@ -113,8 +126,9 @@ struct HabitServiceTests {
     func requestsAuthorizationEvenIfRemindersAreOff() async throws {
         h.notifications.authorization = .notDetermined
         h.settings.reminderEnabled = false
-
         _ = try await register("本を1ページ読む")
+
+        await service.requestNotificationAuthorization()
 
         #expect(h.notifications.requestAuthorizationCount == 1)
         #expect(h.reminderIdentifiers.isEmpty)
@@ -123,8 +137,10 @@ struct HabitServiceTests {
     @Test("許可・拒否が決まっていれば、通知の許可は求めない", arguments: [NotificationAuthorization.authorized, .denied])
     func doesNotRequestWhenDetermined(authorization: NotificationAuthorization) async throws {
         h.notifications.authorization = authorization
-
         _ = try await register("本を1ページ読む")
+
+        #expect(await service.needsNotificationAuthorization() == false)
+        await service.requestNotificationAuthorization()
 
         #expect(h.notifications.requestAuthorizationCount == 0)
     }
@@ -228,6 +244,21 @@ struct HabitServiceTests {
         #expect(h.habitStore.activeHabits().map(\.id) == [habit.id])
         #expect(h.notifications.removedIdentifiers.isEmpty)
         #expect(h.reminderIdentifiers.count == 60)
+    }
+
+    @Test("アーカイブは 1 回の保存で完結する。並び順の書き換えが別に失敗して、中途半端な状態で終わることはない")
+    func archiveDoesNotDependOnSeparateOrderUpdate() async throws {
+        let a = try await register("A")
+        let b = try await register("B")
+        h.habits.failsOrderUpdates = true
+
+        try await service.archive(habitID: a.id)
+
+        #expect(h.habitStore.activeHabits().map(\.id) == [b.id])
+        #expect(h.habitStore.activeHabits().map(\.order) == [0])
+
+        try await service.archive(habitID: b.id)
+        #expect(h.reminderIdentifiers.isEmpty)
     }
 
     @Test("名前変更・並び替えの保存に失敗したら、元の値のまま")

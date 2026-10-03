@@ -2,10 +2,10 @@
   "frequencyAdverbs": ["every day", "everyday", "daily", "always", "every morning", "every night"],
   "goalSuffixes": [
     "keep", "keeps", "keeping", "kept",
-    "build a habit of", "builds a habit of", "building a habit of",
-    "make a habit of", "makes a habit of", "making a habit of",
+    "build a habit of", "builds a habit of", "building a habit of", "built a habit of",
+    "make a habit of", "makes a habit of", "making a habit of", "made a habit of",
     "try to", "tries to", "trying to", "tried to",
     "work on", "works on", "working on", "worked on",
-    "get better at", "gets better at", "getting better at"
+    "get better at", "gets better at", "getting better at", "got better at", "gotten better at"
   ]
 }

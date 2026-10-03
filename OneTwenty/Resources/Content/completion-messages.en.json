@@ -1,3 +1,28 @@
 {
-  "messages": ["Two minutes, done.", "That's it for today.", "Recorded."]
+  "messages": [
+    "Two minutes, done.",
+    "That's it for today.",
+    "Recorded.",
+    "Two minutes are up.",
+    "Time's up.",
+    "That's the end.",
+    "The timer has stopped.",
+    "Logged for today.",
+    "Today's two minutes end here.",
+    "120 seconds have passed.",
+    "That's all.",
+    "End of the two minutes.",
+    "It's on the record.",
+    "This is where it ends.",
+    "Finished.",
+    "Today's entry is saved.",
+    "The two minutes are over.",
+    "Stopping here.",
+    "That's today's part.",
+    "Time. That's all for now.",
+    "You can stop now.",
+    "Marked for today.",
+    "Done for today.",
+    "All recorded."
+  ]
 }

@@ -34,6 +34,8 @@ final class FailingHabitRepository: HabitRepository {
     struct Failure: Error {}
 
     var failsWrites = false
+    /// 並び順の書き換えだけを失敗させる。
+    var failsOrderUpdates = false
     private let wrapped: HabitRepository
 
     init(wrapping wrapped: HabitRepository) {
@@ -56,6 +58,7 @@ final class FailingHabitRepository: HabitRepository {
 
     func updateOrders(_ orders: [UUID: Int]) throws {
         try failIfNeeded()
+        if failsOrderUpdates { throw Failure() }
         try wrapped.updateOrders(orders)
     }
 

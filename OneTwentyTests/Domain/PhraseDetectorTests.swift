@@ -8,7 +8,7 @@ struct PhraseDetectorTests {
     )
     private let en = DetectionTerms(
         frequencyAdverbs: ["every day", "everyday", "daily", "always", "every morning"],
-        goalSuffixes: ["keep", "keeps", "keeping", "kept", "try to"]
+        goalSuffixes: ["keep", "keeps", "keeping", "kept", "try to", "work on"]
     )
 
     // MARK: 検出する・しない
@@ -37,6 +37,16 @@ struct PhraseDetectorTests {
     ])
     func detectsEnglishInflections(text: String, term: String) {
         #expect(PhraseDetector.detect(text, terms: en) == .goalSuffix(term: term))
+    }
+
+    @Test("英語の語が別の単語の一部として現れても、検出しない", arguments: [
+        "Add an entry to my journal",
+        "Put my homework on the desk",
+        "Do some housekeeping",
+        "Read the skeptical review",
+    ])
+    func ignoresEnglishTermsInsideOtherWords(text: String) {
+        #expect(PhraseDetector.detect(text, terms: en) == .none)
     }
 
     @Test("英語は大文字と小文字を区別しない", arguments: ["KEEP READING", "Try To Run", "tRy tO run"])

@@ -98,14 +98,15 @@ struct AppEnvironmentTests {
 
         coordinator.presentWizard(mode: .new(origin: .home))
         let wizard = try #require(coordinator.presentedWizard?.viewModel)
-        wizard.text = "部屋を片付ける"
+        // 同梱のテンプレートのどのキーワードにも一致しない文（一致すると、テンプレートの提示に進む）
+        wizard.text = "窓を開ける"
         await wizard.submit()
         await wizard.answerTwoMinute(true)
         settings.reload()
         let habit = try #require(settings.habits.first)
 
         settings.rename(habit)
-        #expect(coordinator.presentedWizard?.mode == .edit(habitID: habit.id, currentTitle: "部屋を片付ける"))
+        #expect(coordinator.presentedWizard?.mode == .edit(habitID: habit.id, currentTitle: "窓を開ける"))
         coordinator.presentedWizard?.viewModel.cancel()
 
         let version = coordinator.dataVersion

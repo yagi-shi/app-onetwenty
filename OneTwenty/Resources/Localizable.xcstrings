@@ -342,7 +342,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only two minutes counts"
+            "value" : "Only the full two minutes count"
           }
         },
         "ja" : {
@@ -980,6 +980,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登録できるのは3件までです"
+          }
+        }
+      }
+    },
+    "wizard.alert.notifications.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A daily reminder, and a notice when your two minutes are up."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "毎日のリマインダーと、タイマーの2分が経ったことのお知らせです。"
+          }
+        }
+      }
+    },
+    "wizard.alert.notifications.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OneTwenty uses two notifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知を2つ使います"
           }
         }
       }

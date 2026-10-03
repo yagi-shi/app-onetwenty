@@ -2,7 +2,7 @@
 
 | 項目       | 内容 |
 | ---------- | ---- |
-| 入力要件   | [requirements.md](../01_要件定義/requirements.md) v1.20 |
+| 入力要件   | [requirements.md](../01_要件定義/requirements.md) v1.21 |
 | 前提       | [01_architecture.md](./01_architecture.md)（レイヤー・配置）/ [02_screens.md](./02_screens.md)（画面の振る舞い）/ [03_data_model.md](./03_data_model.md)（エンティティ・値型・キー） |
 | 本書の範囲 | 型・プロトコル・ViewModel・Repository・サービスの責務とインターフェース。ドメインの状態遷移（2分タイマー・起動時の復元・通知予約・習慣の通常/アーカイブ） |
 
@@ -217,11 +217,11 @@ stateDiagram-v2
 | 項目 | 内容 |
 | ---- | ---- |
 | 対応要件 | FR-1.5.1 / FR-1.5.1.1 / FR-1.5.1.2 / FR-1.5.1.3 / FR-1.5.1.4 |
-| 責務 | 検出語リストとの部分一致で、目標表現の語尾と頻度副詞を検出する。頻度副詞なら除去後の文を作る |
+| 責務 | 検出語リストとの照合で、目標表現の語尾と頻度副詞を検出する。頻度副詞なら除去後の文を作る |
 | インターフェース | `static func detect(_ text: String, terms: DetectionTerms) -> Detection`。結果は `.goalSuffix(term)` / `.frequencyAdverb(term, stripped: String)` / `.none` |
-| 規則 | ①**リストにある語だけ**を部分一致で探す（FR-1.5.1.1。日英共通のロジック。英語は大文字小文字を区別しない）②英語の活用形はリスト側に全形が入っている前提で、語形変化の処理をしない（FR-1.5.1.4）③両方見つかった場合は**目標表現を優先**する（再分解が必要なため）④頻度副詞は最初に一致した1語を除去し、連続する空白を1つにまとめ前後を削る。除去後が空になる場合は `.none` とする（空の代替案を出さない） |
+| 規則 | ①**リストにある語だけ**を探す（FR-1.5.1.1。日英共通のロジック。大文字小文字を区別しない）。照合は部分一致を基本とし、**英数字で始まる（終わる）語は、その側が単語の区切りのときだけ一致とする**（"entry to" の "try to" や "housekeeping" の "keep" を拾わない。日本語の語は端が英数字でないため、文中のどこでも一致する。FR-1.5.1.4）。照合の処理は `TermSearch` に置き、MD-15 と共有する②英語の活用形はリスト側に全形が入っている前提で、語形変化の処理をしない（FR-1.5.1.4）③両方見つかった場合は**目標表現を優先**する（再分解が必要なため）④頻度副詞は最初に一致した1語を除去し、連続する空白を1つにまとめ前後を削る。除去後が空になる場合は `.none` とする（空の代替案を出さない） |
 | 依存先 / 依存元 | なし（`DetectionTerms` は 03 DM-11 の値）/ `WizardStateMachine` |
-| テスト方法 | リストの各語で検出されること、リスト外の語で検出されないこと（FR-1.5.1.1）、`keep` / `keeps` / `keeping` / `kept` がすべて検出されること（FR-1.5.1.4）、「毎日新聞を1ページ読む」→ 頻度副詞「毎日」、除去後「新聞を1ページ読む」（FR-1.5.1.2）、目標表現と頻度副詞を両方含む文で目標表現が返ること、「毎日」だけの入力で `.none` |
+| テスト方法 | リストの各語で検出されること、リスト外の語で検出されないこと（FR-1.5.1.1）、`keep` / `keeps` / `keeping` / `kept` がすべて検出されること（FR-1.5.1.4）、「毎日新聞を1ページ読む」→ 頻度副詞「毎日」、除去後「新聞を1ページ読む」（FR-1.5.1.2）、目標表現と頻度副詞を両方含む文で目標表現が返ること、「毎日」だけの入力で `.none`、**英語の語が別の単語の一部として現れても検出しないこと**（"Add an entry to my journal" など。FR-1.5.1.4） |
 
 ### MD-15 TemplateMatcher
 
@@ -229,7 +229,7 @@ stateDiagram-v2
 | ---- | ---- |
 | 対応要件 | FR-1.6 / FR-1.7（01 仮定 A-7） |
 | 責務 | 自由入力に該当するテンプレートのカテゴリを返す |
-| インターフェース | `static func match(_ text: String, categories: [TemplateCategory]) -> TemplateCategory?`。データの並び順で最初に、いずれかのキーワードを部分一致で含むカテゴリを返す（英語は大文字小文字を区別しない） |
+| インターフェース | `static func match(_ text: String, categories: [TemplateCategory]) -> TemplateCategory?`。データの並び順で最初に、いずれかのキーワードを部分一致で含むカテゴリを返す（大文字小文字を区別しない。**英数字で始まるキーワードは単語の先頭からだけ一致**：`read` は `reading` に一致し、`bread` には一致しない。`TermSearch`） |
 | 依存先 / 依存元 | なし / `WizardStateMachine` |
 | テスト方法 | キーワードを含む入力で該当カテゴリ、含まない入力で `nil`（汎用パターンが任意の選択肢になる。02 SC-41） |
 
@@ -283,7 +283,7 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Active : register [アクティブ3件未満] / order=末尾、リマインダー同期、必要なら通知許可を要求
+    [*] --> Active : register [アクティブ3件未満] / order=末尾、リマインダー同期
     [*] --> [*] : register [アクティブ3件] / 登録しない
     Active --> Active : rename [編集フローで2分確認を通過] / title のみ更新
     Active --> Active : reorder / アクティブ全件の order を振り直す
@@ -298,7 +298,7 @@ stateDiagram-v2
 | State | `Active` / `ConfirmingArchive`（02 SC-62 の確認ダイアログ表示中。画面側の状態）/ `Archived` |
 | Event | register / rename / reorder / アーカイブ操作 / やめる / アーカイブする |
 | Guard | register：アクティブ3件未満（FR-1.9）。rename：02 SC-43 の `TwoMinCheck` で「はい」 |
-| 副作用 | register：`order = アクティブ件数`、`ReminderService.sync()`（0→1件なら予約開始。FR-5.4.1）、通知許可が「未決定」なら要求してから `sync()`（FR-5.6）。archive：`archivedAt = now`、`order = -1`、残りのアクティブ習慣を0から振り直す、`ReminderService.sync()`（0件になれば全取消。FR-5.4.1）。rename：`title` のみ更新、`originalIntent` と Session はそのまま（FR-6.4 / FR-1.8） |
+| 副作用 | register：`order = アクティブ件数`、`ReminderService.sync()`（0→1件なら予約開始。FR-5.4.1）、通知許可が「未決定」なら、**説明の後に別の呼び出し `requestNotificationAuthorization()` で**要求してから `sync()`（FR-5.6。MD-41 / MD-55）。archive：`archivedAt = now`、`order = -1`、残りのアクティブ習慣を0から振り直す、`ReminderService.sync()`（0件になれば全取消。FR-5.4.1）。rename：`title` のみ更新、`originalIntent` と Session はそのまま（FR-6.4 / FR-1.8） |
 | 遷移不能 | **`Archived` から出る遷移は存在しない**（削除・復元なし。FR-6.3 / FR-3.12）。タイマー実行中はタイマー画面が全画面を占め設定画面を操作できないため、実行中の習慣をアーカイブする経路はない（FR-2.12） |
 | キャンセル | アーカイブは確認ダイアログの「やめる」で取り消せる（実行前のみ）。実行後の Undo はない（FR-6.3.1） |
 | テスト方法 | 3件で register が拒否されること、アーカイブで枠が空き register できること（FR-6.3）、`order` が欠番なく振り直されること、アーカイブ後に `archivedAt` を変更する API が存在しないこと、全件アーカイブでリマインダーの全取消が呼ばれること |
@@ -357,7 +357,7 @@ stateDiagram-v2
 | 項目 | 内容 |
 | ---- | ---- |
 | 対応要件 | TR-3 / FR-1.9 / FR-6.3 / FR-6.4 / FR-3.12 |
-| インターフェース | `activeHabits() -> [HabitSnapshot]`（`archivedAt == nil`、`order` 昇順）/ `allHabits() -> [HabitSnapshot]`（ヒートマップの分母用）/ `habit(id:) -> HabitSnapshot?` / `insert(_:) throws` / `updateTitle(id:title:) throws` / `updateOrders(_ orders: [UUID: Int]) throws` / `archive(id:at:) throws` |
+| インターフェース | `activeHabits() -> [HabitSnapshot]`（`archivedAt == nil`、`order` 昇順）/ `allHabits() -> [HabitSnapshot]`（ヒートマップの分母用）/ `habit(id:) -> HabitSnapshot?` / `insert(_:) throws` / `updateTitle(id:title:) throws` / `updateOrders(_ orders: [UUID: Int]) throws` / `archive(id:at:) throws`（`archivedAt` と `order = -1` の書き込みに加え、**残りのアクティブな習慣の `order` を 0 から詰め直すところまでを1回の保存で行う**。別々に保存すると、詰め直しだけ失敗したときに「アーカイブ済みなのに失敗と表示される」状態になるため。05 EH-02） |
 | 用意しない API | 物理削除、`archivedAt` を `nil` に戻す操作（03 DM-08 I-3 / I-7） |
 | 依存元 | 読み取り：各 ViewModel・サービス。書き込み：`HabitService` のみ（01 §3） |
 | テスト方法 | インメモリの `ModelContainer` で、`activeHabits` がアーカイブ済みを含まず `order` 順であること、`archive` 後に `allHabits` には残ること |
@@ -417,11 +417,11 @@ stateDiagram-v2
 | ---- | ---- |
 | 対応要件 | FR-1.2 / FR-1.8 / FR-1.9 / FR-5.4.1 / FR-5.6 / FR-5.6.1 / FR-6.3 / FR-6.4 |
 | 責務 | MD-21 の遷移の実行 |
-| インターフェース | `register(title:originalIntent:) async throws`（3件なら `HabitError.limitReached`）/ `rename(habitID:title:) async throws` / `reorder(_ orderedIDs: [UUID]) throws` / `archive(habitID:) async throws` |
-| 規則 | register の後、通知許可が「未決定」なら**リマインダーのオン/オフに関係なく**要求する（FR-5.6 / FR-5.6.1。完了通知に許可が要るため）。要求の結果を待ってから `ReminderService.sync()` を呼ぶ |
+| インターフェース | `register(title:originalIntent:) async throws`（3件なら `HabitError.limitReached`）/ `rename(habitID:title:) async throws` / `reorder(_ orderedIDs: [UUID]) throws` / `archive(habitID:) async throws` / `needsNotificationAuthorization() async -> Bool` / `requestNotificationAuthorization() async` |
+| 規則 | **`register` は許可を要求しない**（保存と `ReminderService.sync()` まで）。iOS の許可ダイアログには使い道を書く欄がないため、許可が「未決定」のときは `WizardViewModel` が先に説明のアラートを出し、「次へ」で `requestNotificationAuthorization()` を呼ぶ（TODO 1.7 / MD-55）。`requestNotificationAuthorization()` は**リマインダーのオン/オフに関係なく**要求し（FR-5.6 / FR-5.6.1。完了通知に許可が要るため）、結果を待ってから `ReminderService.sync()` を呼ぶ。許可が決定済みなら何もしない |
 | 依存先 | `HabitRepository`・`NotificationClient`・`ReminderService`・`WallClock` |
 | 依存元 | `WizardViewModel`（register / rename）・`SettingsViewModel`（reorder / archive） |
-| テスト方法 | MD-21 のテスト項目。加えて、初回 register で許可要求が1回だけ呼ばれること、2回目以降（許可が決定済み）では呼ばれないこと、リマインダーがオフでも要求されること（FR-5.6.1） |
+| テスト方法 | MD-21 のテスト項目。加えて、`register` だけでは許可要求が呼ばれないこと、`requestNotificationAuthorization()` で1回だけ呼ばれること、許可が決定済みなら呼ばれないこと、リマインダーがオフでも要求されること（FR-5.6.1） |
 
 ### MD-42 ReminderService
 
@@ -560,9 +560,9 @@ stateDiagram-v2
 | ---- | ---- |
 | 対応要件 | FR-1.x / FR-6.4.x（画面は 02 SC-40〜SC-43） |
 | 状態 | `WizardStateMachine`（MD-12）、入力中の文字列、文字数表示（`count / limit`）。文字数は入力のたびに `TitleValidator`（MD-13）を呼び、**返ってきた `TitleValidation` の `count` / `limit` をそのまま表示に使う**（`.ok` のときも値を持つ。MD-13）。送信操作の可否も同じ結果の `state` で決める（05 EH-07） |
-| 出力 | 状態機械の効果に応じて：`.register` → `HabitService.register`、`.rename` → `HabitService.rename`、`.close` → **キャンセルとして終了を `AppCoordinator` に通知する**（起動元への遷移は `AppCoordinator` が行う。FR-1.10.2）。**画面は自分で閉じず、結果を `AppCoordinator` に通知する**（`presentedWizard` の所有者が閉じる。MD-50 の「ウィザードの提示と終了」）。<br>①**成功**：成功を通知する（起動元への遷移は `AppCoordinator` が行う。FR-1.10.2）。<br>②**保存失敗**（05 EH-02）：アラートを出すだけで状態機械をそのまま保持し、`TwoMinCheck` から同じ操作をやり直せる（02 SC-42 / SC-43 の保存失敗の遷移）。<br>③**`limitReached`**（05 EH-08）：やり直しても成功しえないため、アラートの OK で `.close` 相当の遷移を行い、**`limitReached` として終了を通知する**（FR-1.9。②の規則を適用すると2分確認に留まり続け、キャンセル以外の出口がなくなる）。画面を閉じると状態機械ごと破棄する（FR-1.10.1）。汎用パターンの型と具体の合成（02 SC-41）も本 ViewModel が行い、状態機械には合成後の文を渡す。**`Describe` では合成する前に入力語が下限（トリム後1文字以上。MD-13 の `.empty`）を満たすことを確認する**：型の文型は常に非空なので、合成後の文だけを見ると空入力が通ってしまう（02 SC-40 / SC-42 / SC-43） |
+| 出力 | 状態機械の効果に応じて：`.register` → `HabitService.register`、`.rename` → `HabitService.rename`、`.close` → **キャンセルとして終了を `AppCoordinator` に通知する**（起動元への遷移は `AppCoordinator` が行う。FR-1.10.2）。**画面は自分で閉じず、結果を `AppCoordinator` に通知する**（`presentedWizard` の所有者が閉じる。MD-50 の「ウィザードの提示と終了」）。<br>①**成功**：成功を通知する（起動元への遷移は `AppCoordinator` が行う。FR-1.10.2）。**ただし新規登録で通知許可が「未決定」のときは、通知する前に説明のアラート（「通知を2つ使います」＋「次へ」）を出し、「次へ」で `HabitService.requestNotificationAuthorization()` を呼び、その答えを待ってから成功を通知する**（FR-5.6 / TODO 1.7。説明を出している間は他の操作を受け付けない。名前変更では出さない）。<br>②**保存失敗**（05 EH-02）：アラートを出すだけで状態機械をそのまま保持し、`TwoMinCheck` から同じ操作をやり直せる（02 SC-42 / SC-43 の保存失敗の遷移）。<br>③**`limitReached`**（05 EH-08）：やり直しても成功しえないため、アラートの OK で `.close` 相当の遷移を行い、**`limitReached` として終了を通知する**（FR-1.9。②の規則を適用すると2分確認に留まり続け、キャンセル以外の出口がなくなる）。画面を閉じると状態機械ごと破棄する（FR-1.10.1）。汎用パターンの型と具体の合成（02 SC-41）も本 ViewModel が行い、状態機械には合成後の文を渡す。**`Describe` では合成する前に入力語が下限（トリム後1文字以上。MD-13 の `.empty`）を満たすことを確認する**：型の文型は常に非空なので、合成後の文だけを見ると空入力が通ってしまう（02 SC-40 / SC-42 / SC-43） |
 | 依存先 | `WizardStateMachine`・`TitleValidator`・`HabitService`・`ContentBundle`（検出語・テンプレート）・`LanguageResolver`・`AppCoordinator`（成功／キャンセル／`limitReached` の終了の通知先。MD-50） |
-| テスト方法 | 状態機械のテストは MD-12 で行う。ここでは効果がサービス呼び出しに正しく変換されること、編集の送信ボタンが上限超過中に無効であること（FR-6.4.2.1）、**保存失敗では終了を通知せず状態機械を保持すること・成功と `limitReached` では対応する終了を `AppCoordinator` に通知すること**（05 EH-02 / EH-08。実際に閉じるのは `AppCoordinator`。MD-50） |
+| テスト方法 | 状態機械のテストは MD-12 で行う。ここでは効果がサービス呼び出しに正しく変換されること、編集の送信ボタンが上限超過中に無効であること（FR-6.4.2.1）、**保存失敗では終了を通知せず状態機械を保持すること・成功と `limitReached` では対応する終了を `AppCoordinator` に通知すること**、**許可が未決定なら説明を出し、「次へ」の後に許可要求が1回だけ呼ばれてから成功を通知すること・許可が決定済みや名前変更では説明を出さないこと**（05 EH-02 / EH-08。実際に閉じるのは `AppCoordinator`。MD-50） |
 
 ### MD-56 StatsViewModel
 

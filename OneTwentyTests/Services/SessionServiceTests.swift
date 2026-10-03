@@ -100,15 +100,12 @@ struct SessionServiceTests {
 
     @Test("完了通知を予約できなくても、タイマーは始まる")
     func startsEvenIfNotificationFails() async throws {
-        // どの識別子で予約されるかは事前に分からないので、開始後の印から確かめる
-        let marker = try await start()
-        await service.abort()
-        h.notifications.failingIdentifiers = [NotificationIdentifier.timer(sessionID: marker.sessionID)]
+        h.notifications.failingPrefixes = ["timer."]
 
-        guard case .started = await service.start(habitID: habit.id) else {
-            Issue.record("開始できるはず")
-            return
-        }
+        let marker = try await start()
+
+        #expect(h.runningStore.load() == marker)
+        #expect(h.timerIdentifiers.isEmpty)
     }
 
     // MARK: 通知の許可

@@ -127,14 +127,19 @@ struct FeedbackPlayerTests {
         #expect(AVAudioSession.sharedInstance().category == .ambient)
     }
 
-    @Test("アプリ本体のバンドルで鳴らしても止まらず、振動は鳴る")
-    func worksWithAppBundle() {
-        let haptics = SpyHaptics()
-        let player = SystemFeedbackPlayer(sound: BundledCompletionSound(), haptics: haptics)
+    @Test("完了音がアプリに入っていて、読み込める。長さは 2 秒以内")
+    func bundledSoundIsShort() throws {
+        let url = try #require(
+            BundledCompletionSound.fileExtensions.lazy
+                .compactMap { Bundle.main.url(forResource: BundledCompletionSound.resourceName, withExtension: $0) }
+                .first
+        )
 
-        player.prepare()
-        player.playCompletion()
+        let duration = try AVAudioPlayer(contentsOf: url).duration
 
-        #expect(haptics.playCount == 1)
+        #expect(duration > 0.2)
+        #expect(duration <= 2)
+        // 実際に鳴らすとテストのたびに音が出るので、読み込みまでを確かめる（再生の経路は無音のファイルで確かめている）
+        SystemFeedbackPlayer(sound: BundledCompletionSound(), haptics: SpyHaptics()).prepare()
     }
 }

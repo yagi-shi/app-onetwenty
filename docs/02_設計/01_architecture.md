@@ -2,7 +2,7 @@
 
 | 項目             | 内容                                                                                                                               |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 入力要件         | [docs/01_要件定義/requirements.md](../01_要件定義/requirements.md) v1.20 / [detection-terms.md](../01_要件定義/detection-terms.md) |
+| 入力要件         | [docs/01_要件定義/requirements.md](../01_要件定義/requirements.md) v1.21 / [detection-terms.md](../01_要件定義/detection-terms.md) |
 | 既存設計         | なし（本書が初版）                                                                                                                 |
 | 既存コード       | Xcode テンプレートのみ（`OneTwentyApp.swift` / `ContentView.swift`）                                                               |
 | 情報源の優先順位 | 要件定義書 ＞ 既存設計書 ＞ 既存コード                                                                                             |
@@ -105,7 +105,7 @@ flowchart TD
 | `SessionRecoveryResolver` | 起動・復帰時に、実行中マーカー・残存 Live Activity の一覧・現在時刻から、①マーカーの扱い（完了として記録／破棄／実行継続）②終了させる Live Activity の集合、を**1回の呼び出しで**判定する（120秒・24時間ルール。掃除の条件は AR-12 ⑤） | FR-2.15 / FR-2.15.1 / FR-2.11.2        |
 | `WizardStateMachine`      | 新規登録フローと編集フローの状態遷移。再分解カウンタの累積、戻る・キャンセル                | FR-1.3〜FR-1.10.5 / FR-6.4.2〜FR-6.4.5 |
 | `TitleValidator`          | 言語別の文字数上限を `String.count` で判定する                                              | FR-1.4.1 / FR-1.4.2 / FR-1.4.3         |
-| `PhraseDetector`          | 検出語リストとの部分一致、頻度副詞の除去案の生成                                            | FR-1.5.1〜FR-1.5.1.4                   |
+| `PhraseDetector`          | 検出語リストとの照合（英語の語は単語の区切りで一致）、頻度副詞の除去案の生成                                            | FR-1.5.1〜FR-1.5.1.4                   |
 | `TemplateMatcher`         | 自由入力と分解テンプレートの対応付け                                                        | FR-1.6 / FR-1.7                        |
 | `DayKey`                  | ローカルタイムゾーンでの日付キー（日付帰属の単位）                                          | FR-3.10 / FR-4.4                       |
 | `DailyStatusResolver`     | 表示日における各習慣の完了状態、全習慣完了の判定                                            | FR-4.1〜FR-4.5.1                       |
@@ -233,7 +233,8 @@ OneTwenty/                          ← アプリ本体ターゲット
 ├── App/
 │   ├── OneTwentyApp.swift           エントリポイント
 │   ├── AppEnvironment.swift         コンポジションルート（具象型の組み立て）
-│   └── AppCoordinator.swift         ルート・表示日・アクティブ化時処理
+│   ├── AppCoordinator.swift         ルート・表示日・アクティブ化時処理
+│   └── AppColors.swift              補助的な文字色・塗りボタンの文字色（NFR-4.1）
 ├── Features/                        View ＋ ViewModel（画面単位）
 │   ├── Onboarding/
 │   ├── Home/
@@ -244,7 +245,7 @@ OneTwenty/                          ← アプリ本体ターゲット
 ├── Domain/                          純粋ロジック（Foundation のみ）
 │   ├── Clock/                       WallClock
 │   ├── Timer/                       TimerEngine / SessionRecoveryResolver / CompletionMessagePicker
-│   ├── Wizard/                      WizardStateMachine / TitleValidator / PhraseDetector / TemplateMatcher
+│   ├── Wizard/                      WizardStateMachine / TitleValidator / PhraseDetector / TemplateMatcher / TermSearch
 │   ├── Daily/                       DayKey / DailyStatusResolver
 │   ├── Stats/                       StreakCalculator / HeatmapCalculator
 │   ├── Reminder/                    ReminderPlanner
@@ -266,7 +267,7 @@ OneTwenty/                          ← アプリ本体ターゲット
     │   ├── templates.ja.json / templates.en.json
     │   ├── detection-terms.ja.json / detection-terms.en.json
     │   └── completion-messages.ja.json / completion-messages.en.json
-    ├── Sounds/                      完了音（TODO 4）
+    ├── Sounds/                      完了音 completion.wav（TODO 4）
     ├── Localizable.xcstrings        UI 文言（String Catalog）
     ├── Assets.xcassets              AccentColor（TODO 3）/ AppIcon
     └── PrivacyInfo.xcprivacy        プライバシーマニフェスト（§9.6）。リソースとしてバンドルに入れる必要があるので同期フォルダ内に置く
@@ -275,7 +276,8 @@ Config/                              ← どのターゲットにも所属させ
 ├── OneTwenty-Info.plist             本体の INFOPLIST_FILE。ビルド設定で表せないキーのみ（AR-11）
 
 Shared/                              ← 両ターゲットに所属
-└── TimerActivityAttributes.swift    Live Activity の属性とコンテンツ状態
+├── TimerActivityAttributes.swift    Live Activity の属性とコンテンツ状態
+└── AccentPalette.swift              アクセント色の値。拡張はアセットを持たないのでここから取る（本体の AccentColor と同じ値。TODO 3）
 
 OneTwentyLiveActivity/               ← Live Activity 拡張ターゲット
 ├── OneTwentyLiveActivityBundle.swift
@@ -409,7 +411,7 @@ OneTwentyUITests/                    ← 既存のまま
 
 `CADisableMinimumFrameDurationOnPhone` に対応する `INFOPLIST_KEY_*` がないことは、基盤フェーズのタスクで Xcode 上で確認する。ビルド設定が存在した場合はそちらに移し、`Config/OneTwenty-Info.plist` と `INFOPLIST_FILE` を削除する。
 
-通知の許可に Info.plist の文言キーは不要である（`requestAuthorization` の説明はアプリ内の画面で行う。TODO 1.7）。
+通知の許可に Info.plist の文言キーは不要である（`requestAuthorization` の説明はアプリ内の画面で行う：最初の習慣を登録した直後、OS のダイアログの前に説明のアラートを1枚出す。02 SC-42 / 04 MD-41・MD-55。TODO 1.7）。
 
 ### AR-12 Live Activity の構成
 
@@ -590,7 +592,7 @@ OneTwentyUITests/                    ← 既存のまま
 | A-4  | 画面の向きは縦向き固定とする                                                                                                                                         | 要件に指定がないが、FR-3.7（1画面に収める）・NFR-4.3・FR-2.5.1（下スワイプ）はいずれも縦向きを前提にしている                                                                                       | AR-10                                   |
 | A-5  | FR-1.4.1 / NFR-6.1 の「表示言語」は、iOS がこのアプリに適用した言語（`Bundle.main.preferredLocalizations.first`）とする                                              | UI の言語と規則の言語が常に一致する。なお端末の言語設定が「フランス語→日本語」の順の場合、iOS は日本語を適用するため規則も日本語側になる                                                           | `LanguageResolver`                      |
 | A-6  | FR-2.15 の復元のため、実行中タイマーのマーカー（`sessionID`・習慣ID・`startedAt`）を UserDefaults に保存する。これは Session ではなく、完了時・中断時・復元判定で記録／破棄と決まった時点で必ず消す。`sessionID` は Live Activity の属性にも同じ値を持たせ、掃除の対象判定（AR-12 ⑤）に使う。**完了時の保存に失敗した場合は、その実行を別キーの「保存待ち」へ移してから実行中マーカーを消す**（05 EH-02b。実行中マーカーを占有したままにすると他の習慣を開始できなくなるため） | 強制終了後に `startedAt` を知る手段が他にない。FR-3.3 が禁じるのは中断した Session の永続化であり、判定前の一時マーカーは対象外と解釈した。`sessionID` がないと、実行中の Activity と取り残された Activity を区別できない | `RunningSessionStore` / `SessionRecoveryResolver` / AR-12 / 05 EH-02b |
-| A-7  | FR-1.6 のテンプレートと自由入力の対応付けは、テンプレートごとに持つキーワードとの部分一致で行う                                                                      | 要件に照合方法の規定がない。FR-1.5.1 の検出と同じ方式にそろえ、LLM を使わない方針（FR-1 注記）と一致させる                                                                                         | `TemplateMatcher`                       |
+| A-7  | FR-1.6 のテンプレートと自由入力の対応付けは、テンプレートごとに持つキーワードとの部分一致で行う（英数字で始まるキーワードは、単語の先頭からだけ一致させる。04 MD-15）                                                                      | 要件に照合方法の規定がない。FR-1.5.1 の検出と同じ方式にそろえ、LLM を使わない方針（FR-1 注記）と一致させる                                                                                         | `TemplateMatcher`                       |
 | A-8  | FR-2.15.1 の24時間ルールは、強制終了に限らず、アプリが裏に回ったまま24時間以上経ってから復帰した場合にも適用する                                                     | どちらも「過去の日に完了が遡って書き込まれる」という同じ問題を生むため                                                                                                                             | `SessionRecoveryResolver`               |
 | A-9  | 統計画面の「現在の連続日数」（FR-3.9）にも、FR-3.5.2（当日未完了なら前日までを維持）と同じ規則を適用する                                                             | FR-3.5.2 は習慣ごとの規定のみだが、全体値だけ毎朝0になると同じ理由で FR-3.6 に反する                                                                                                               | `StreakCalculator`                      |
 | A-10 | FR-3.8.1 の分母「その日に有効だった習慣」は、`createdAt` の日から `archivedAt` の日までを両端含めて数える                                                            | 「`archivedAt` 以前」の「以前」は当日を含むため                                                                                                                                                    | `HeatmapCalculator`                     |

@@ -356,7 +356,7 @@ struct AppCoordinatorTests {
         await wizard.answerTwoMinute(true)
         #expect(coordinator.presentedWizard != nil)
 
-        wizard.dismissAlert()
+        await wizard.dismissAlert()
 
         #expect(coordinator.presentedWizard == nil)
         #expect(coordinator.dataVersion == 0)
@@ -372,7 +372,7 @@ struct AppCoordinatorTests {
         h.habits.failsWrites = true
 
         await wizard.answerTwoMinute(true)
-        wizard.dismissAlert()
+        await wizard.dismissAlert()
 
         #expect(coordinator.presentedWizard?.viewModel === wizard)
     }

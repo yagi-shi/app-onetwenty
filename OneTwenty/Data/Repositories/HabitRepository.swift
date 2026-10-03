@@ -16,6 +16,7 @@ protocol HabitRepository {
     func insert(_ habit: HabitSnapshot) throws
     func updateTitle(id: UUID, title: String) throws
     func updateOrders(_ orders: [UUID: Int]) throws
+    /// 残った習慣の並び順も、同じ保存の中で 0 から詰め直す。
     /// 既にアーカイブ済みなら何もしない（アーカイブした時刻は書き換えない）。
     func archive(id: UUID, at date: Date) throws
 }
@@ -75,8 +76,18 @@ final class SwiftDataHabitRepository: HabitRepository {
     func archive(id: UUID, at date: Date) throws {
         let habit = try model(id: id)
         guard habit.archivedAt == nil else { return }
+        let remaining = try context.fetch(FetchDescriptor<Habit>(
+            predicate: #Predicate { $0.archivedAt == nil },
+            sortBy: [SortDescriptor(\.order)]
+        )).filter { $0.id != id }
+
+        // 並び順の詰め直しを別の保存にすると、そちらだけ失敗したときに
+        // 「アーカイブはされたのに、失敗と表示される」状態になる
         habit.archivedAt = date
         habit.order = -1
+        for (order, other) in remaining.enumerated() {
+            other.order = order
+        }
         try save()
     }
 

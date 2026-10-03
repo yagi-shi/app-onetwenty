@@ -11,13 +11,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C7A1E00E3054000000A00001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B691B3403053F2E8004CB48A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C7A1E0013054000000A00001;
-			remoteInfo = OneTwentyLiveActivity;
-		};
 		B691B3563053F2EA004CB48A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B691B3403053F2E8004CB48A /* Project object */;
@@ -31,6 +24,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = B691B3473053F2E8004CB48A;
 			remoteInfo = OneTwenty;
+		};
+		C7A1E00E3054000000A00001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B691B3403053F2E8004CB48A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7A1E0013054000000A00001;
+			remoteInfo = OneTwentyLiveActivity;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -49,10 +49,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneTwentyLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B3483053F2E8004CB48A /* OneTwenty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OneTwenty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B3553053F2EA004CB48A /* OneTwentyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OneTwentyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B691B35F3053F2EA004CB48A /* OneTwentyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OneTwentyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7A1E0023054000000A00001 /* OneTwentyLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneTwentyLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -66,19 +66,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C7A1E0063054000000A00001 /* OneTwentyLiveActivity */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C7A1E0073054000000A00001 /* Exceptions for "OneTwentyLiveActivity" folder in "OneTwentyLiveActivity" target */,
-			);
-			path = OneTwentyLiveActivity;
-			sourceTree = "<group>";
-		};
-		C7A1E0083054000000A00001 /* Shared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Shared;
-			sourceTree = "<group>";
-		};
 		B691B34A3053F2E8004CB48A /* OneTwenty */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = OneTwenty;
@@ -92,6 +79,19 @@
 		B691B3623053F2EA004CB48A /* OneTwentyUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = OneTwentyUITests;
+			sourceTree = "<group>";
+		};
+		C7A1E0063054000000A00001 /* OneTwentyLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C7A1E0073054000000A00001 /* Exceptions for "OneTwentyLiveActivity" folder in "OneTwentyLiveActivity" target */,
+			);
+			path = OneTwentyLiveActivity;
+			sourceTree = "<group>";
+		};
+		C7A1E0083054000000A00001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */

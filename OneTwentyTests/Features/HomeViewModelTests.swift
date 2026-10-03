@@ -193,6 +193,23 @@ struct HomeViewModelTests {
         #expect(h.runningStore.load() == started.first)
     }
 
+    @Test("Live Activity も完了通知も用意できなくても、タイマー画面の表示を依頼する")
+    func tapStartsTimerEvenWhenSystemIntegrationsFail() async throws {
+        let habit = try h.addHabit()
+        viewModel.reload(displayDay: h.today)
+        h.liveActivity.startFails = true
+        h.notifications.failingPrefixes = ["timer."]
+        var started: [RunningSessionMarker] = []
+        viewModel.onStartTimer = { started.append($0) }
+
+        await viewModel.tap(habitID: habit.id)
+
+        #expect(started.count == 1)
+        #expect(h.runningStore.load() == started.first)
+        #expect(h.liveActivity.activities.isEmpty)
+        #expect(h.timerIdentifiers.isEmpty)
+    }
+
     @Test("完了済みの習慣をタップしても、何も起きない")
     func tapOnCompletedDoesNothing() async throws {
         let habit = try h.addHabit()

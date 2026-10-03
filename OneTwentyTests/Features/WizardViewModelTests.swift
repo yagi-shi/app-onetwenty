@@ -143,7 +143,7 @@ struct WizardViewModelTests {
         #expect(viewModel.machine.candidate == "床の物を1つ拾う")
         #expect(viewModel.machine.redecomposeCount == 1)
 
-        viewModel.dismissAlert()
+        await viewModel.dismissAlert()
         #expect(viewModel.alert == nil)
         #expect(finishes.values.isEmpty)
 
@@ -163,7 +163,7 @@ struct WizardViewModelTests {
         #expect(viewModel.alert == .limitReached)
         #expect(finishes.values.isEmpty)
 
-        viewModel.dismissAlert()
+        await viewModel.dismissAlert()
 
         #expect(finishes.values == [.limitReached])
         #expect(viewModel.step == .freeInput)
@@ -183,6 +183,100 @@ struct WizardViewModelTests {
         #expect(renamed.title == "本を開く")
         #expect(renamed.originalIntent == habit.originalIntent)
         #expect(h.habitStore.allHabits().count == 1)
+    }
+
+    // MARK: 通知の許可の説明
+
+    @Test("通知の許可が未決定なら、登録の後に説明を出す。「次へ」で許可を求めてから、終わったことを知らせる")
+    func explainsNotificationsBeforeRequesting() async {
+        h.notifications.authorization = .notDetermined
+        let (viewModel, finishes) = makeViewModel()
+        await submit(viewModel, "部屋を片付ける")
+
+        await viewModel.answerTwoMinute(true)
+
+        // 登録は済んでいるが、説明を読んでもらうまでは許可を求めず、閉じもしない
+        #expect(h.habitStore.activeHabits().map(\.title) == ["部屋を片付ける"])
+        #expect(viewModel.alert == .notificationExplanation)
+        #expect(h.notifications.requestAuthorizationCount == 0)
+        #expect(finishes.values.isEmpty)
+
+        await viewModel.dismissAlert()
+
+        #expect(viewModel.alert == nil)
+        #expect(h.notifications.requestAuthorizationCount == 1)
+        #expect(h.reminderIdentifiers.count == 60)
+        #expect(finishes.values == [.succeeded])
+    }
+
+    @Test("説明の「次へ」が二重に届いても、許可を求めるのも、終わりを知らせるのも 1 回だけ")
+    func explanationIsHandledOnce() async {
+        h.notifications.authorization = .notDetermined
+        let (viewModel, finishes) = makeViewModel()
+        await submit(viewModel, "部屋を片付ける")
+        await viewModel.answerTwoMinute(true)
+
+        await viewModel.dismissAlert()
+        await viewModel.dismissAlert()
+
+        #expect(h.notifications.requestAuthorizationCount == 1)
+        #expect(finishes.values == [.succeeded])
+    }
+
+    @Test("説明を出している間は、ウィザードの操作を受け付けない（二重に登録しない）")
+    func ignoresInputWhileExplaining() async {
+        h.notifications.authorization = .notDetermined
+        let (viewModel, finishes) = makeViewModel()
+        await submit(viewModel, "部屋を片付ける")
+        await viewModel.answerTwoMinute(true)
+
+        await viewModel.answerTwoMinute(true)
+
+        #expect(viewModel.alert == .notificationExplanation)
+        #expect(h.habitStore.activeHabits().count == 1)
+        #expect(finishes.values.isEmpty)
+    }
+
+    @Test("許可を拒否されても、登録は済んでいて、終わったことを知らせる")
+    func deniedAuthorizationStillFinishes() async {
+        h.notifications.authorization = .notDetermined
+        h.notifications.authorizationAfterRequest = .denied
+        let (viewModel, finishes) = makeViewModel()
+        await submit(viewModel, "部屋を片付ける")
+        await viewModel.answerTwoMinute(true)
+
+        await viewModel.dismissAlert()
+
+        #expect(finishes.values == [.succeeded])
+        #expect(h.habitStore.activeHabits().count == 1)
+        #expect(h.reminderIdentifiers.isEmpty)
+    }
+
+    @Test("通知の許可が決まっていれば、説明を出さずに終わる", arguments: [NotificationAuthorization.authorized, .denied])
+    func noExplanationWhenDetermined(authorization: NotificationAuthorization) async {
+        h.notifications.authorization = authorization
+        let (viewModel, finishes) = makeViewModel()
+        await submit(viewModel, "部屋を片付ける")
+
+        await viewModel.answerTwoMinute(true)
+
+        #expect(viewModel.alert == nil)
+        #expect(finishes.values == [.succeeded])
+        #expect(h.notifications.requestAuthorizationCount == 0)
+    }
+
+    @Test("名前の変更では、通知の許可が未決定でも説明を出さない")
+    func renameDoesNotExplain() async throws {
+        let habit = try h.addHabit("本を開く")
+        h.notifications.authorization = .notDetermined
+        let (viewModel, finishes) = makeViewModel(.edit(habitID: habit.id, currentTitle: habit.title))
+        await submit(viewModel, "本を1ページ読む")
+
+        await viewModel.answerTwoMinute(true)
+
+        #expect(viewModel.alert == nil)
+        #expect(finishes.values == [.succeeded])
+        #expect(h.notifications.requestAuthorizationCount == 0)
     }
 
     @Test("名前変更の保存に失敗したら、閉じずにアラートを出す")

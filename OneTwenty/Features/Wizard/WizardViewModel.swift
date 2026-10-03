@@ -10,6 +10,8 @@ final class WizardViewModel {
         case saveFailed
         /// 習慣が上限に達していて登録できない。OK で閉じる。
         case limitReached
+        /// 登録は済んでいる。通知の使い道を説明し、「次へ」で iOS の許可ダイアログを出す。
+        case notificationExplanation
     }
 
     private(set) var machine: WizardStateMachine
@@ -125,13 +127,22 @@ final class WizardViewModel {
         onFinish?(.cancelled)
     }
 
-    /// アラートの OK。上限に達していた場合は、やり直しても登録できないので閉じる。
-    func dismissAlert() {
+    /// アラートのボタン。何度呼ばれても、出ていたアラートの後始末は 1 回しか走らない。
+    func dismissAlert() async {
         let dismissed = alert
         alert = nil
-        if dismissed == .limitReached {
+        switch dismissed {
+        case .limitReached:
+            // やり直しても登録できないので閉じる
             _ = machine.cancel()
             onFinish?(.limitReached)
+        case .notificationExplanation:
+            isSaving = true
+            defer { isSaving = false }
+            await habitService.requestNotificationAuthorization()
+            onFinish?(.succeeded)
+        case .saveFailed, nil:
+            break
         }
     }
 
@@ -142,7 +153,7 @@ final class WizardViewModel {
     }
 
     private func perform(_ event: (inout WizardStateMachine) -> WizardEffect) async {
-        guard !isSaving else { return }
+        guard !isSaving, alert == nil else { return }
         let depth = machine.historyDepth
         let input = text
         let effect = event(&machine)
@@ -160,24 +171,36 @@ final class WizardViewModel {
         case .close:
             onFinish?(.cancelled)
         case .register(let title, let originalIntent):
-            await save { try await habitService.register(title: title, originalIntent: originalIntent) }
+            guard await save({ try await habitService.register(title: title, originalIntent: originalIntent) }) else {
+                return
+            }
+            if await habitService.needsNotificationAuthorization() {
+                // 終わったことを知らせるのは、説明を読んでもらい、許可に答えてもらった後
+                alert = .notificationExplanation
+            } else {
+                onFinish?(.succeeded)
+            }
         case .rename(let habitID, let title):
-            await save { try await habitService.rename(habitID: habitID, title: title) }
+            if await save({ try await habitService.rename(habitID: habitID, title: title) }) {
+                onFinish?(.succeeded)
+            }
         }
     }
 
-    /// 保存に成功したときだけ終わったことを知らせる。失敗したら状態を保ったまま知らせる。
-    private func save(_ operation: () async throws -> Void) async {
+    /// 保存に失敗したら、状態を保ったままアラートで知らせる。
+    /// - Returns: 保存できたら `true`。
+    private func save(_ operation: () async throws -> Void) async -> Bool {
         isSaving = true
         defer { isSaving = false }
         do {
             try await operation()
-            onFinish?(.succeeded)
+            return true
         } catch HabitError.limitReached {
             alert = .limitReached
         } catch {
             alert = .saveFailed
         }
+        return false
     }
 }
 

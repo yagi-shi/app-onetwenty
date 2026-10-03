@@ -30,9 +30,11 @@ struct OnboardingView: View {
                 case .first:
                     Button("onboarding.next") { viewModel.next() }
                         .buttonStyle(.borderedProminent)
+                        .prominentButtonLabel()
                 case .second:
                     Button("onboarding.start") { viewModel.finish() }
                         .buttonStyle(.borderedProminent)
+                        .prominentButtonLabel()
                 }
             }
             .padding()

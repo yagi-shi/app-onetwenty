@@ -2,7 +2,7 @@
 
 | 項目       | 内容 |
 | ---------- | ---- |
-| 入力要件   | [requirements.md](../01_要件定義/requirements.md) v1.20 §6 データモデル |
+| 入力要件   | [requirements.md](../01_要件定義/requirements.md) v1.21 §6 データモデル |
 | 前提       | [01_architecture.md](./01_architecture.md) AR-03（状態の置き場所）/ AR-09（コンテンツデータの配置） |
 | 本書の範囲 | 永続化するエンティティ、UserDefaults のキー、同梱データの形式、ドメイン用の値型、整合性、ライフサイクル、マイグレーション |
 
@@ -192,7 +192,7 @@ stateDiagram-v2
 | ---------- | -- | ---- |
 | `categories` | 配列 | 頻出カテゴリ |
 | `categories[].id` | 文字列 | カテゴリID（例：`exercise`） |
-| `categories[].keywords` | 文字列の配列 | 自由入力との照合に使う語（部分一致。01 仮定 A-7） |
+| `categories[].keywords` | 文字列の配列 | 自由入力との照合に使う語（部分一致。英数字で始まる語は単語の先頭からだけ一致。01 仮定 A-7 / 04 MD-15） |
 | `categories[].templates` | 文字列の配列 | 分解済みのテンプレート（そのまま `title` 候補になる） |
 
 データの制約：テンプレートの総数は**日英それぞれ20以上**（FR-1.6。リリース可否の下限）。各テンプレートは①その言語の文字数上限以内（FR-1.4.1）②検出語リストのどの語も含まない、を満たす（06 のテストで検証）。
@@ -201,7 +201,7 @@ stateDiagram-v2
 
 | フィールド | 型 | 内容 |
 | ---------- | -- | ---- |
-| `frequencyAdverbs` | 文字列の配列 | 頻度副詞（例：毎日、必ず / every day, daily）。英語は大文字小文字を区別せずに照合する |
+| `frequencyAdverbs` | 文字列の配列 | 頻度副詞（例：毎日、必ず / every day, daily）。英語は大文字小文字を区別せず、単語の区切りでだけ一致させる（04 MD-14） |
 | `goalSuffixes` | 文字列の配列 | 目標表現の語尾。**英語は全活用形を列挙する**（keep / keeps / keeping / kept 等。FR-1.5.1.4） |
 
 データの原典は [detection-terms.md](../01_要件定義/detection-terms.md)。JSON はそこから変換する（TODO 10）。閉じたリストであり、ここにない語は検出しない（FR-1.5.1.1）。

@@ -2,18 +2,73 @@
   "categories": [
     {
       "id": "reading",
-      "keywords": ["read", "book"],
-      "templates": ["Read one page", "Open the book"]
+      "keywords": ["read", "book", "novel"],
+      "templates": ["Open the book", "Read one page", "Put the book on the pillow"]
+    },
+    {
+      "id": "running",
+      "keywords": ["run", "jog", "marathon", "walk"],
+      "templates": ["Put on running shoes", "Step outside the front door", "Change into running clothes"]
+    },
+    {
+      "id": "stretch",
+      "keywords": ["stretch", "yoga", "flexib"],
+      "templates": ["Roll out the yoga mat", "Touch my toes once", "Roll my shoulders once"]
     },
     {
       "id": "exercise",
-      "keywords": ["exercise", "workout", "run"],
-      "templates": ["Put on running shoes", "Do one push-up"]
+      "keywords": ["exercise", "workout", "work out", "gym", "fitness", "push-up", "pushup", "squat", "strength", "weightlift", "lift"],
+      "templates": ["Do one push-up", "Do one squat", "Change into workout clothes"]
+    },
+    {
+      "id": "cleaning",
+      "keywords": ["clean", "tidy", "declutter", "organiz", "laundry", "dishes", "vacuum"],
+      "templates": ["Put one item back in its place", "Throw away one piece of trash", "Pick one thing up off the floor"]
+    },
+    {
+      "id": "language",
+      "keywords": ["english", "spanish", "french", "german", "japanese", "chinese", "korean", "language", "vocab"],
+      "templates": ["Open the vocabulary app", "Review one flashcard", "Read one sentence aloud"]
+    },
+    {
+      "id": "coding",
+      "keywords": ["coding", "code", "program"],
+      "templates": ["Open the code editor", "Write one line of code", "Open one page of the docs"]
+    },
+    {
+      "id": "music",
+      "keywords": ["piano", "guitar", "violin", "drum", "instrument", "music"],
+      "templates": ["Take the instrument out of its case", "Open the sheet music", "Play one scale"]
     },
     {
       "id": "study",
-      "keywords": ["study", "learn"],
-      "templates": ["Open the textbook", "Learn one word"]
+      "keywords": ["study", "learn", "exam", "homework", "course"],
+      "templates": ["Open the textbook", "Solve one problem", "Open my notes"]
+    },
+    {
+      "id": "meditation",
+      "keywords": ["meditat", "mindful", "breath"],
+      "templates": ["Sit down and take one deep breath", "Close my eyes and count to ten", "Sit on the cushion"]
+    },
+    {
+      "id": "writing",
+      "keywords": ["journal", "diary", "blog", "writing", "write"],
+      "templates": ["Open the journal", "Write one sentence", "Pick up a pen"]
+    },
+    {
+      "id": "sleep",
+      "keywords": ["sleep", "bed", "wake", "get up early"],
+      "templates": ["Set the alarm", "Put the phone on the charger", "Lay out tomorrow's clothes"]
+    },
+    {
+      "id": "health",
+      "keywords": ["water", "hydrat", "diet", "weight", "vegetable", "health"],
+      "templates": ["Fill a glass of water", "Step on the scale", "Put one vegetable on the plate"]
+    },
+    {
+      "id": "money",
+      "keywords": ["budget", "saving", "save", "money", "expense"],
+      "templates": ["Open the budgeting app", "Log one receipt"]
     }
   ]
 }

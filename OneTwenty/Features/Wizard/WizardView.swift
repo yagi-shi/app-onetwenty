@@ -38,6 +38,7 @@ struct WizardView: View {
                         Task { await viewModel.submit() }
                     }
                     .buttonStyle(.borderedProminent)
+                    .prominentButtonLabel()
                     .disabled(!viewModel.canSubmit)
                     .accessibilityHint(blockerHint ?? "")
                 }
@@ -46,7 +47,13 @@ struct WizardView: View {
         }
         .disabled(viewModel.isSaving)
         .alert(alertTitle, isPresented: isAlertPresented) {
-            Button("common.ok") { viewModel.dismissAlert() }
+            Button(alertButtonTitle) {
+                Task { await viewModel.dismissAlert() }
+            }
+        } message: {
+            if let alertMessage {
+                Text(alertMessage)
+            }
         }
         .onChange(of: viewModel.step, initial: true) {
             isTextFieldFocused = viewModel.acceptsText
@@ -66,7 +73,7 @@ struct WizardView: View {
                 // テンプレートに当たらなかったときは、型から選ぶこともできる
                 Text("wizard.generic.optional")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondaryText)
                 patternButtons
             }
         case .describe:
@@ -121,8 +128,9 @@ struct WizardView: View {
 
             let validation = viewModel.validation
             Text(verbatim: "\(validation.count) / \(validation.limit)")
-                .font(.footnote.monospacedDigit())
-                .foregroundStyle(validation.state == .tooLong ? Color.red : Color.secondary)
+                // 超過は太字で示す。警告の色は使わない
+                .font(.footnote.monospacedDigit().weight(validation.state == .tooLong ? .bold : .regular))
+                .foregroundStyle(validation.state == .tooLong ? Color.primary : Color.secondaryText)
                 .accessibilityLabel(Text("wizard.count.accessibility \(validation.count) \(validation.limit)"))
         }
     }
@@ -171,14 +179,30 @@ struct WizardView: View {
     private var alertTitle: String {
         switch viewModel.alert {
         case .limitReached: String(localized: "wizard.alert.limitReached")
+        case .notificationExplanation: String(localized: "wizard.alert.notifications.title")
         case .saveFailed, nil: String(localized: "common.alert.saveFailed")
+        }
+    }
+
+    private var alertMessage: String? {
+        switch viewModel.alert {
+        case .notificationExplanation: String(localized: "wizard.alert.notifications.message")
+        case .limitReached, .saveFailed, nil: nil
+        }
+    }
+
+    /// 説明の後には iOS の許可ダイアログが続くので、「OK」ではなく「次へ」にする。
+    private var alertButtonTitle: String {
+        switch viewModel.alert {
+        case .notificationExplanation: String(localized: "wizard.next")
+        case .limitReached, .saveFailed, nil: String(localized: "common.ok")
         }
     }
 
     private var isAlertPresented: Binding<Bool> {
         Binding(
             get: { viewModel.alert != nil },
-            set: { if !$0 { viewModel.dismissAlert() } }
+            set: { if !$0 { Task { await viewModel.dismissAlert() } } }
         )
     }
 }

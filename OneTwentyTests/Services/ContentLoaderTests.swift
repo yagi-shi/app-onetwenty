@@ -115,16 +115,36 @@ struct ContentLoaderTests {
 
     // MARK: 同梱データの中身が満たすべき制約
 
+    @Test("テンプレートと完了文言は、日本語・英語とも 20 件以上あり、重複がない", arguments: [ContentLanguage.ja, .en])
+    func hasEnoughTemplatesAndMessages(language: ContentLanguage) {
+        let content = loader(log: FailureLog()).load(language: language)
+        let templates = content.templates.flatMap(\.templates)
+
+        #expect(templates.count >= 20)
+        #expect(Set(templates).count == templates.count)
+        #expect(content.completionMessages.count >= 20)
+        #expect(Set(content.completionMessages).count == content.completionMessages.count)
+    }
+
+    @Test("カテゴリの id は重複せず、キーワードとテンプレートに空の文字列がない", arguments: [ContentLanguage.ja, .en])
+    func categoriesAreWellFormed(language: ContentLanguage) {
+        let categories = loader(log: FailureLog()).load(language: language).templates
+
+        #expect(Set(categories.map(\.id)).count == categories.count)
+        for category in categories {
+            #expect(category.keywords.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(category.id)")
+            #expect(category.templates.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(category.id)")
+        }
+    }
+
     @Test("各テンプレートは、その言語の文字数上限以内で、検出語を含まない", arguments: [ContentLanguage.ja, .en])
     func templatesSatisfyConstraints(language: ContentLanguage) {
         let content = loader(log: FailureLog()).load(language: language)
-        let terms = content.terms.frequencyAdverbs + content.terms.goalSuffixes
 
         for template in content.templates.flatMap(\.templates) {
             #expect(TitleValidator.validate(template, language: language).state == .ok, "\(template)")
-            for term in terms {
-                #expect(!template.localizedCaseInsensitiveContains(term), "「\(template)」が「\(term)」を含む")
-            }
+            // 選んだテンプレートが、そのまま検出に引っかかって先へ進めなくなることがないように
+            #expect(PhraseDetector.detect(template, terms: content.terms) == .none, "\(template)")
         }
     }
 
@@ -142,8 +162,16 @@ struct ContentLoaderTests {
     func englishGoalSuffixesListAllInflections() {
         let suffixes = loader(log: FailureLog()).load(language: .en).terms.goalSuffixes
 
-        for inflection in ["keep", "keeps", "keeping", "kept"] {
-            #expect(suffixes.contains(inflection))
+        let inflections = [
+            "keep", "keeps", "keeping", "kept",
+            "build a habit of", "builds a habit of", "building a habit of", "built a habit of",
+            "make a habit of", "makes a habit of", "making a habit of", "made a habit of",
+            "try to", "tries to", "trying to", "tried to",
+            "work on", "works on", "working on", "worked on",
+            "get better at", "gets better at", "getting better at", "got better at", "gotten better at",
+        ]
+        for inflection in inflections {
+            #expect(suffixes.contains(inflection), "\(inflection)")
         }
     }
 }

@@ -114,6 +114,37 @@ struct HabitRepositoryTests {
         #expect(archived.order == -1)
     }
 
+    @Test("アーカイブすると、残りの習慣の並び順が 0 から詰め直される。既にアーカイブ済みの習慣には触れない")
+    func archiveRenumbersRemainingHabits() throws {
+        let old = HabitSnapshot.fixture(title: "やめた習慣", order: -1, archivedAt: Date(timeIntervalSince1970: 100))
+        let a = HabitSnapshot.fixture(title: "A", order: 0)
+        let b = HabitSnapshot.fixture(title: "B", order: 1)
+        let c = HabitSnapshot.fixture(title: "C", order: 2)
+        for habit in [old, a, b, c] {
+            try repository.insert(habit)
+        }
+
+        try repository.archive(id: a.id, at: Date(timeIntervalSince1970: 1_000))
+
+        #expect(repository.activeHabits().map(\.title) == ["B", "C"])
+        #expect(repository.activeHabits().map(\.order) == [0, 1])
+        #expect(repository.habit(id: old.id) == old)
+    }
+
+    @Test("アーカイブ済みの習慣をもう一度アーカイブしても、残りの並び順は変わらない")
+    func archiveTwiceKeepsOrders() throws {
+        let a = HabitSnapshot.fixture(title: "A", order: 0)
+        let b = HabitSnapshot.fixture(title: "B", order: 1)
+        try repository.insert(a)
+        try repository.insert(b)
+        try repository.archive(id: a.id, at: Date(timeIntervalSince1970: 1_000))
+        try repository.updateOrders([b.id: 5])
+
+        try repository.archive(id: a.id, at: Date(timeIntervalSince1970: 2_000))
+
+        #expect(repository.activeHabits().map(\.order) == [5])
+    }
+
     @Test("アーカイブ済みの習慣をもう一度アーカイブしても、アーカイブした時刻は変わらない")
     func archiveTwiceKeepsFirstDate() throws {
         let habit = HabitSnapshot.fixture(order: 0)
